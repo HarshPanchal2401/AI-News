@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Pulse — Premium AI News</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --font-header: 'Outfit', sans-serif;
+      
+      /* Dark Theme (Default) */
+      --bg-app: #090a0f;
+      --bg-mobile: #11131c;
+      --bg-card: rgba(26, 29, 43, 0.7);
+      --bg-input: #1a1d2b;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --success: #10b981;
+      --warning: #f59e0b;
+      
+      --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --glass-blur: blur(12px);
+    }
+
+    html.light {
+      /* Light Theme */
+      --bg-app: #f3f4f6;
+      --bg-mobile: #ffffff;
+      --bg-card: rgba(243, 244, 246, 0.7);
+      --bg-input: #f3f4f6;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --accent: #4f46e5;
+      --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+      --shadow-premium: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-primary);
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.4s ease;
+      overflow-x: hidden;
+    }
+
+    /* ── App Container ── */
+    .app-container {
+      width: 100%;
+      max-width: 600px;
+      min-height: 100vh;
+      margin: 0 auto;
+      background-color: var(--bg-mobile);
+      box-shadow: var(--shadow-premium);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: background-color 0.4s ease;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 20px 20px 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(17, 19, 28, 0.7);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+    html.light header {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-gradient);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .brand-title {
+      font-family: var(--font-header);
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .action-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    .action-btn:active {
+      transform: scale(0.92);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* ── Main Scroll View ── */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      padding-bottom: 90px;
+      position: relative;
+    }
+    .content-area::-webkit-scrollbar {
+      display: none;
+    }
+
+    .section-title {
+      font-family: var(--font-header);
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── News Feed View ── */
+    .featured-card {
+      width: 100%;
+      height: 180px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.4) 100%), url('https://picsum.photos/400/200') no-repeat center center/cover;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 15px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .featured-card:hover {
+      transform: scale(0.99);
+    }
+    .featured-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to bottom, rgba(9, 10, 15, 0) 40%, rgba(9, 10, 15, 0.85) 100%);
+    }
+    html.light .featured-overlay {
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.85) 100%);
+    }
+
+    .featured-badge {
+      background: var(--accent-gradient);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: fit-content;
+      z-index: 10;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .featured-title {
+      font-family: var(--font-header);
+      font-size: 1.1rem;
+      font-weight: 600;
+      z-index: 10;
+      line-height: 1.3;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    html.light .featured-title {
+      text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    }
+
+    /* Feed List */
+    .feed-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* Article Card */
+    .article-card {
+      background-color: var(--bg-card);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+    }
+    .article-card:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    .article-card:active {
+      transform: scale(0.98);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .source-chip {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .trust-badge {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .card-title {
+      font-family: var(--font-header);
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 5px;
+    }
+    .tag-container {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag-chip {
+      font-size: 0.65rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+    .bookmark-btn {
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s, background-color 0.2s;
+    }
+    .bookmark-btn:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    .bookmark-btn.active {
+      color: var(--accent);
+    }
+
+    /* ── Bottom Navigation ── */
+    nav {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 10px 18px 10px;
+      background: rgba(17, 19, 28, 0.85);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border-color);
+      position: sticky;
+      bottom: 0;
+      z-index: 90;
+      width: 100%;
+    }
+    html.light nav {
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      gap: 4px;
+      transition: color 0.2s;
+    }
+    .nav-item.active {
+      color: var(--accent);
+    }
+    .nav-item span {
+      font-size: 0.65rem;
+      font-weight: 500;
+    }
+
+    /* ── Views Toggle ── */
+    .view-panel {
+      display: none;
+      height: 100%;
+    }
+    .view-panel.active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Drawer Component ── */
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .drawer {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 100%);
+      width: 100%;
+      max-width: 600px;
+      height: 85vh;
+      background: var(--bg-mobile);
+      border-top-left-radius: 30px;
+      border-top-right-radius: 30px;
+      z-index: 101;
+      transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+    }
+    .drawer.active {
+      transform: translate(-50%, 0);
+    }
+
+    .drawer-handle {
+      width: 40px;
+      height: 5px;
+      background-color: var(--border-color);
+      border-radius: 3px;
+      margin: 12px auto;
+      cursor: pointer;
+    }
+
+    .drawer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 24px 40px 24px;
+    }
+    .drawer-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .drawer-header {
+      margin-bottom: 20px;
+    }
+    .drawer-metadata {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .drawer-title {
+      font-family: var(--font-header);
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .drawer-body {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .summary-section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 15px;
+    }
+    .summary-title {
+      font-family: var(--font-header);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .summary-bullet {
+      margin-left: 15px;
+      margin-bottom: 6px;
+    }
+
+    .source-link-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--accent-gradient);
+      color: white;
+      text-decoration: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      margin-top: 15px;
+      transition: transform 0.2s;
+    }
+    .source-link-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* ── Profile & Preferences View ── */
+    .profile-avatar-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 25px;
+      margin-top: 15px;
+    }
+    .avatar-mock {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      color: white;
+      font-size: 2.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+      margin-bottom: 10px;
+    }
+    .profile-name-input {
+      background-color: transparent;
+      border: 1px solid transparent;
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 700;
+      font-family: var(--font-header);
+      font-size: 1.4rem;
+      width: 90%;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .profile-name-input:focus, .profile-name-input:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+    }
+
+    .preference-group {
+      margin-bottom: 20px;
+    }
+    .pref-title {
+      font-family: var(--font-header);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .chip-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .select-chip {
+      font-size: 0.85rem;
+      font-weight: 500;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+    }
+    .select-chip:active {
+      transform: scale(0.96);
+    }
+    .select-chip.active {
+      background-color: rgba(99, 102, 241, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Skeleton Loader */
+    .skeleton-loader {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .skeleton-card {
+      height: 120px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 37%, rgba(255,255,255,0.03) 63%);
+      background-size: 400% 100%;
+      animation: skeleton-loading 1.4s ease infinite;
+      border-radius: 16px;
+    }
+    @keyframes skeleton-loading {
+      0% { background-position: 100% 50%; }
+      100% { background-position: 0 50%; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    /* Auth Styles */
+    .auth-tab-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+    }
+    .auth-tab-btn.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    html.light .auth-tab-btn.active {
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    input:focus {
+      border-color: var(--accent) !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ── Auth Screen ── -->
+    <div id="auth-screen" style="display: flex; flex-direction: column; height: 100%; justify-content: center; padding: 32px; gap: 20px; z-index: 150; background-color: var(--bg-mobile); overflow-y: auto;">
+      <div style="text-align: center; margin-bottom: 6px;">
+        <div style="width: 50px; height: 50px; background: var(--accent-gradient); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; margin: 0 auto 14px auto; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);">
+          <i data-lucide="zap" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h2 style="font-family: var(--font-header); font-weight: 700; font-size: 1.6rem; letter-spacing: -0.5px; margin-bottom: 4px;">AI Pulse</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Premium AI Market Intelligence Feed</p>
+      </div>
+
+      <!-- Segment Selector -->
+      <div style="display: flex; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 3px; border-radius: 10px; margin-bottom: 6px;">
+        <button id="auth-tab-login" onclick="toggleAuthMode('login')" style="flex: 1; padding: 8px; border-radius: 7px; font-weight: 600; font-size: 0.8rem; font-family: var(--font-primary); cursor: pointer; transition: all 0.2s;" class="auth-tab-btn active">Login</button>
+        <button id="auth-tab-register" onclick="toggleAuthMode('register')" style="flex: 1; padding: 8px; border-radius: 7px; font-weight: 600; font-size: 0.8rem; font-family: var(--font-primary); cursor: pointer; transition: all 0.2s;" class="auth-tab-btn">Register</button>
+      </div>
+
+      <!-- Form Inputs -->
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Display Name (Register only) -->
+        <div id="auth-field-name" style="display: none; flex-direction: column; gap: 5px;">
+          <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Full Name</label>
+          <input type="text" id="auth-name" placeholder="John Doe" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-family: var(--font-primary); font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
+        </div>
+
+        <!-- Email -->
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Email Address</label>
+          <input type="email" id="auth-email" placeholder="you@example.com" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-family: var(--font-primary); font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
+        </div>
+
+        <!-- Password -->
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-family: var(--font-primary); font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
+        </div>
+
+        <!-- Confirm Password (Register only) -->
+        <div id="auth-field-confirm" style="display: none; flex-direction: column; gap: 5px;">
+          <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Confirm Password</label>
+          <input type="password" id="auth-confirm-password" placeholder="••••••••" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-family: var(--font-primary); font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button id="auth-submit-btn" onclick="handleAuthSubmit()" style="width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--accent-gradient); color: white; font-family: var(--font-primary); font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(99,102,241,0.25); transition: transform 0.15s ease;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+        <span id="auth-btn-label">Login</span>
+        <i data-lucide="arrow-right" style="width: 15px; height: 15px;"></i>
+      </button>
+
+      <!-- Status Indicator -->
+      <div id="auth-status" style="text-align: center; font-size: 0.75rem; min-height: 16px; color: var(--text-muted); margin-top: 4px;"></div>
+    </div>
+
+    <!-- ── Main App Container ── -->
+    <div id="app-screen" style="display: none; flex-direction: column; flex: 1;">
+
+      <header>
+        <div class="brand">
+          <div class="brand-logo"><i data-lucide="zap" style="width: 16px; height: 16px;"></i></div>
+          <div class="brand-title">AI Pulse</div>
+        </div>
+        <div class="header-actions">
+          <button class="action-btn" id="theme-toggle" onclick="toggleTheme()"><i data-lucide="sun"></i></button>
+        </div>
+      </header>
+
+    <!-- ── Feed View ── -->
+    <div class="content-area view-panel active" id="view-feed">
+
+      <!-- Fetch Live News Button -->
+      <div style="margin-bottom: 18px;">
+        <button id="fetch-live-btn" onclick="fetchLiveNews()" style="
+          width: 100%;
+          padding: 14px 20px;
+          border: none;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+          color: white;
+          font-family: var(--font-primary);
+          font-size: 0.95rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+          letter-spacing: 0.01em;
+        " onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">
+          <i data-lucide="zap" style="width:18px;height:18px;"></i>
+          <span id="fetch-btn-label">Fetch Live AI News</span>
+        </button>
+        <div id="fetch-status" style="text-align:center; font-size:0.78rem; color:var(--text-muted); margin-top:8px; min-height:16px;"></div>
+      </div>
+
+      <div class="section-title" id="live-section-title" style="display:none;">
+        Top Stories <i data-lucide="sparkles" style="color: var(--accent); width: 18px; height: 18px;"></i>
+      </div>
+
+      <!-- Loading spinner -->
+      <div id="live-loading" style="display:none; text-align:center; padding:30px 0;">
+        <div style="
+          width: 44px; height: 44px;
+          border: 3px solid rgba(99,102,241,0.2);
+          border-top-color: #6366f1;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+          margin: 0 auto 14px;
+        "></div>
+        <div style="font-size:0.85rem; color:var(--text-muted);">Fetching from 19 live sources…</div>
+      </div>
+
+      <!-- Live news cards -->
+      <div class="feed-container" id="live-news-feed" style="display:none;"></div>
+
+      <!-- Old DB feed (hidden by default, shown if no live fetch yet) -->
+      <div class="section-title" id="db-section-title">Latest Updates <i data-lucide="database" style="color: var(--text-muted); width: 16px; height: 16px;"></i></div>
+      <div class="skeleton-loader" id="feed-skeleton">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+      <div class="feed-container" id="articles-feed" style="display: none;"></div>
+    </div>
+
+    <!-- ── Daily Brief View ── -->
+    <div class="content-area view-panel" id="view-brief">
+      <div class="section-title">Your Daily Briefing <i data-lucide="calendar" style="color: var(--accent); width: 18px; height: 18px;"></i></div>
+      <div style="margin-bottom: 20px; font-size: 0.85rem; color: var(--text-muted);" id="brief-date"></div>
+      
+      <div class="feed-container" id="brief-feed">
+        <div class="article-card" style="text-align: center; padding: 30px;">
+          <i data-lucide="coffee" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--accent);"></i>
+          <div style="font-weight: 600; font-size: 1rem;">No brief generated today</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Your personalized daily brief will appear here once the pipelines execute.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Bookmarks View ── -->
+    <div class="content-area view-panel" id="view-bookmarks">
+      <div class="section-title">Saved Bookmarks <i data-lucide="bookmark" style="color: var(--accent); width: 18px; height: 18px;"></i></div>
+      
+      <div class="feed-container" id="bookmarks-feed">
+        <div class="article-card" style="text-align: center; padding: 30px;">
+          <i data-lucide="bookmark-x" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--text-muted);"></i>
+          <div style="font-weight: 600; font-size: 1rem;">No bookmarks saved yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Profile / Preferences View ── -->
+    <div class="content-area view-panel" id="view-profile">
+      <div class="section-title">Preferences <i data-lucide="settings" style="color: var(--accent); width: 18px; height: 18px;"></i></div>
+      
+      <div class="profile-avatar-area">
+        <div class="avatar-mock" id="profile-initials">HP</div>
+        <input type="text" class="profile-name-input" id="profile-name" value="Harsh Panchal" onchange="updateProfileName(this.value)">
+      </div>
+
+      <div class="preference-group" style="margin-top: 10px;">
+        <div class="pref-title">News Goals <span style="text-transform: none; font-size: 0.75rem; font-weight: normal; margin-left: 5px;">(What are you looking for?)</span></div>
+        <div class="chip-selector" id="topics-selector">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <div class="preference-group">
+        <div class="pref-title">Followed Categories</div>
+        <div class="chip-selector" id="categories-selector">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <div class="preference-group">
+        <div class="pref-title">Followed Companies</div>
+        <div class="chip-selector" id="companies-selector">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Logout Button -->
+      <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+        <button onclick="handleLogout()" style="
+          width: 100%;
+          padding: 12px;
+          border: 1px solid rgba(239, 68, 68, 0.4);
+          border-radius: 10px;
+          background: rgba(239, 68, 68, 0.08);
+          color: #ef4444;
+          font-family: var(--font-primary);
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: background 0.2s, transform 0.1s;
+        " onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+          <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+          Logout Account
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Navigation ── -->
+    <nav>
+      <div class="nav-item active" onclick="switchView('feed')">
+        <i data-lucide="layout-list"></i>
+        <span>Feed</span>
+      </div>
+      <div class="nav-item" onclick="switchView('brief')">
+        <i data-lucide="newspaper"></i>
+        <span>Daily Brief</span>
+      </div>
+      <div class="nav-item" onclick="switchView('bookmarks')">
+        <i data-lucide="bookmark"></i>
+        <span>Bookmarks</span>
+      </div>
+      <div class="nav-item" onclick="switchView('profile')">
+        <i data-lucide="user"></i>
+        <span>Profile</span>
+      </div>
+    </nav>
+  </div> <!-- close app-screen -->
+
+    <!-- ── Drawer Overlay ── -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="detail-drawer">
+      <div class="drawer-handle" onclick="closeDrawer()"></div>
+      <div class="drawer-content" id="drawer-content">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- State ---
+    let articles = [];
+    let savedBookmarks = new Set();
+    let userProfile = null;
+    let userPreferences = null;
+    let authMode = "login";  // "login" or "register"
+
+    // --- Authentication System Helpers ---
+    function checkAuthState() {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        showAppScreen();
+        // Load initial data
+        loadUserProfile();
+        loadArticles();
+        renderPreferences();
+      } else {
+        showAuthScreen();
+      }
+    }
+
+    function showAuthScreen() {
+      document.getElementById("auth-screen").style.display = "flex";
+      document.getElementById("app-screen").style.display = "none";
+      // Clear inputs
+      document.getElementById("auth-email").value = "";
+      document.getElementById("auth-password").value = "";
+      document.getElementById("auth-name").value = "";
+      document.getElementById("auth-confirm-password").value = "";
+      document.getElementById("auth-status").textContent = "";
+    }
+
+    function showAppScreen() {
+      document.getElementById("auth-screen").style.display = "none";
+      document.getElementById("app-screen").style.display = "flex";
+    }
+
+    function toggleAuthMode(mode) {
+      authMode = mode;
+      document.querySelectorAll(".auth-tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.getElementById("auth-status").textContent = "";
+
+      if (mode === "login") {
+        document.getElementById("auth-tab-login").classList.add("active");
+        document.getElementById("auth-field-name").style.display = "none";
+        document.getElementById("auth-field-confirm").style.display = "none";
+        document.getElementById("auth-btn-label").textContent = "Login";
+      } else {
+        document.getElementById("auth-tab-register").classList.add("active");
+        document.getElementById("auth-field-name").style.display = "flex";
+        document.getElementById("auth-field-confirm").style.display = "flex";
+        document.getElementById("auth-btn-label").textContent = "Register";
+      }
+    }
+
+    async function handleAuthSubmit() {
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const status = document.getElementById("auth-status");
+      const submitBtn = document.getElementById("auth-submit-btn");
+
+      if (!email || !password) {
+        status.textContent = "⚠️ Please fill all fields.";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.7";
+      status.textContent = "Processing...";
+
+      try {
+        if (authMode === "login") {
+          const res = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.detail || "Invalid login credentials.");
+          }
+          
+          const data = await res.json();
+          localStorage.setItem("access_token", data.access_token);
+          localStorage.setItem("refresh_token", data.refresh_token);
+          
+          status.textContent = "✓ Success!";
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = "1";
+            checkAuthState();
+          }, 600);
+          
+        } else {
+          // Register
+          const name = document.getElementById("auth-name").value.trim();
+          const confirmPassword = document.getElementById("auth-confirm-password").value;
+
+          if (!name || !confirmPassword) {
+            throw new Error("Please fill in all register fields.");
+          }
+          if (password !== confirmPassword) {
+            throw new Error("Passwords do not match.");
+          }
+
+          const registerRes = await fetch('/api/v1/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, display_name: name })
+          });
+
+          if (!registerRes.ok) {
+            const data = await registerRes.json();
+            throw new Error(data.detail || "Registration failed.");
+          }
+
+          // Auto-login after registration
+          status.textContent = "Registered! Logging in...";
+          const loginRes = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+
+          if (!loginRes.ok) throw new Error("Auto-login failed.");
+          
+          const tokenData = await loginRes.json();
+          localStorage.setItem("access_token", tokenData.access_token);
+          localStorage.setItem("refresh_token", tokenData.refresh_token);
+
+          status.textContent = "✓ Welcome!";
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = "1";
+            checkAuthState();
+          }, 800);
+        }
+      } catch (err) {
+        status.textContent = `⚠️ ${err.message}`;
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = "1";
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      showAuthScreen();
+    }
+
+    // --- Authenticated Fetch Helper ---
+    async function authenticatedFetch(url, options = {}) {
+      const token = localStorage.getItem("access_token");
+      options.headers = {
+        ...options.headers,
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      };
+      
+      const res = await fetch(url, options);
+      if (res.status === 401) {
+        // Token expired or invalid — force logout
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        showAuthScreen();
+      }
+      return res;
+    }
+
+    const availableTopics = [
+      "Market & Investment", "Developer & Code", "Research & Papers",
+      "Enterprise & B2B", "Consumer Tech", "Startup Ecosystem"
+    ];
+
+    const availableCategories = [
+      "LLMs", "AI Agents", "Research", "Robotics", "Healthcare",
+      "Finance", "Coding", "Open Source", "Enterprise AI", "Safety",
+      "Computer Vision", "NLP", "Multimodal", "Hardware"
+    ];
+
+    const availableCompanies = [
+      "OpenAI", "Google", "Anthropic", "Microsoft", "Meta",
+      "NVIDIA", "Amazon", "Apple", "Tesla", "DeepMind",
+      "Mistral AI", "Hugging Face", "xAI", "Perplexity AI"
+    ];
+
+    // --- Init ---
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Set date
+      const options = { weekday: 'long', month: 'long', day: 'numeric' };
+      document.getElementById("brief-date").innerText = new Date().toLocaleDateString("en-US", options);
+      
+      // Initialize icons
+      lucide.createIcons();
+      
+      // Check auth and load app/data accordingly
+      checkAuthState();
+    });
+
+    // --- View Switching ---
+    function switchView(viewName) {
+      document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      
+      const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(item => 
+        item.querySelector('span').innerText.toLowerCase() === (viewName === 'feed' ? 'feed' : viewName === 'brief' ? 'daily brief' : viewName)
+      );
+      if (activeNav) activeNav.classList.add('active');
+      
+      const activePanel = document.getElementById(`view-${viewName}`);
+      if (activePanel) activePanel.classList.add('active');
+      
+      if (viewName === 'bookmarks') {
+        renderBookmarks();
+      } else if (viewName === 'brief') {
+        loadDailyBrief();
+      }
+    }
+
+    // --- Theme Toggle ---
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeBtn = document.getElementById("theme-toggle");
+      
+      if (html.classList.contains("dark")) {
+        html.classList.remove("dark");
+        html.classList.add("light");
+        themeBtn.innerHTML = '<i data-lucide="moon"></i>';
+      } else {
+        html.classList.remove("light");
+        html.classList.add("dark");
+        themeBtn.innerHTML = '<i data-lucide="sun"></i>';
+      }
+      lucide.createIcons();
+    }
+
+    // --- Data Loaders ---
+    async function loadUserProfile() {
+      try {
+        const res = await authenticatedFetch('/api/v1/users/me');
+        if (res.ok) {
+          userProfile = await res.json();
+          // Update profile display
+          document.getElementById("profile-name").value = userProfile.display_name || "Guest";
+          const initials = (userProfile.display_name || "GU").split(" ").map(n => n[0]).join("").toUpperCase();
+          document.getElementById("profile-initials").innerText = initials;
+          
+          // Load preferences
+          const prefRes = await authenticatedFetch('/api/v1/preferences');
+          if (prefRes.ok) {
+            userPreferences = await prefRes.json();
+            if (userPreferences.bookmarked_articles) {
+              savedBookmarks = new Set(userPreferences.bookmarked_articles);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      }
+    }
+
+    async function loadArticles() {
+      try {
+        const res = await authenticatedFetch('/api/v1/news');
+        if (res.ok) {
+          const data = await res.json();
+          articles = data.items || [];
+          renderFeed();
+        }
+      } catch (err) {
+        console.error("Error loading news:", err);
+      } finally {
+        document.getElementById("feed-skeleton").style.display = 'none';
+        document.getElementById("articles-feed").style.display = 'flex';
+      }
+    }
+
+    // --- Live News Fetcher (with Load More) ---
+    let _liveAllArticles = [];   // full list from API
+    let _liveShownCount = 0;     // how many are currently rendered
+    const LIVE_PAGE = 12;        // articles per page
+    const LOAD_MORE_SIZE = 15;   // articles added on each "Load More"
+
+    async function fetchLiveNews() {
+      const btn = document.getElementById('fetch-live-btn');
+      const label = document.getElementById('fetch-btn-label');
+      const status = document.getElementById('fetch-status');
+      const loading = document.getElementById('live-loading');
+      const feed = document.getElementById('live-news-feed');
+      const sectionTitle = document.getElementById('live-section-title');
+      const dbSection = document.getElementById('db-section-title');
+      const skeleton = document.getElementById('feed-skeleton');
+      const dbFeed = document.getElementById('articles-feed');
+
+      // Loading state
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      label.textContent = 'Fetching…';
+      status.textContent = 'Connecting to 19 live sources — this takes ~20 seconds';
+      loading.style.display = 'block';
+      feed.style.display = 'none';
+      sectionTitle.style.display = 'none';
+
+      try {
+        const res = await authenticatedFetch(`/api/v1/news/fetch-live?page_size=${LIVE_PAGE}&days=3`, { method: 'POST' });
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+
+        // Store ALL articles for client-side pagination
+        _liveAllArticles = data.articles || [];
+        _liveShownCount = 0;
+
+        // Hide DB feed once live news loads
+        dbSection.style.display = 'none';
+        skeleton.style.display = 'none';
+        dbFeed.style.display = 'none';
+
+        // Show live feed
+        sectionTitle.style.display = 'flex';
+        loading.style.display = 'none';
+        feed.style.display = 'flex';
+        feed.innerHTML = '';
+
+        const showing = Math.min(LIVE_PAGE, _liveAllArticles.length);
+        status.textContent = `Showing top ${showing} of ${data.total_available} recent articles (last ${data.days_window} days)`;
+
+        // Render first page
+        appendArticleCards(_liveAllArticles.slice(0, LIVE_PAGE), 0);
+        _liveShownCount = Math.min(LIVE_PAGE, _liveAllArticles.length);
+
+        // Add "Load More" button if there are more
+        if (_liveAllArticles.length > _liveShownCount) {
+          appendLoadMoreButton();
+        }
+
+        // Reset button
+        label.textContent = 'Refresh Live News';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        lucide.createIcons();
+
+      } catch (err) {
+        loading.style.display = 'none';
+        status.textContent = `⚠️ Error: ${err.message}`;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        label.textContent = 'Retry Fetch';
+        console.error('Live fetch error:', err);
+      }
+    }
+
+    function loadMoreLiveNews() {
+      const feed = document.getElementById('live-news-feed');
+
+      // Remove existing Load More button
+      const oldBtn = document.getElementById('load-more-btn');
+      if (oldBtn) oldBtn.remove();
+
+      // Add divider before older articles (only on first load-more)
+      if (_liveShownCount === LIVE_PAGE) {
+        const divider = document.createElement('div');
+        divider.style.cssText = `
+          display: flex; align-items: center; gap: 10px;
+          margin: 8px 0 4px; width: 100%;
+        `;
+        divider.innerHTML = `
+          <div style="flex:1; height:1px; background:var(--border-color);"></div>
+          <span style="font-size:0.7rem; color:var(--text-muted); font-weight:600; white-space:nowrap;">
+            OLDER STORIES
+          </span>
+          <div style="flex:1; height:1px; background:var(--border-color);"></div>
+        `;
+        feed.appendChild(divider);
+      }
+
+      const nextBatch = _liveAllArticles.slice(_liveShownCount, _liveShownCount + LOAD_MORE_SIZE);
+      appendArticleCards(nextBatch, _liveShownCount);
+      _liveShownCount += nextBatch.length;
+
+      // Update status
+      const status = document.getElementById('fetch-status');
+      status.textContent = `Showing ${_liveShownCount} of ${_liveAllArticles.length} articles`;
+
+      // Show load more button again if there are still more
+      if (_liveShownCount < _liveAllArticles.length) {
+        appendLoadMoreButton();
+      }
+
+      lucide.createIcons();
+    }
+
+    function appendLoadMoreButton() {
+      const feed = document.getElementById('live-news-feed');
+      const remaining = _liveAllArticles.length - _liveShownCount;
+
+      const wrapper = document.createElement('div');
+      wrapper.id = 'load-more-btn';
+      wrapper.style.cssText = 'width:100%; padding: 6px 0 2px;';
+      wrapper.innerHTML = `
+        <button onclick="loadMoreLiveNews()" style="
+          width: 100%;
+          padding: 11px 16px;
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          background: var(--bg-card);
+          color: var(--text-muted);
+          font-family: var(--font-primary);
+          font-size: 0.82rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: background 0.15s, color 0.15s;
+          backdrop-filter: var(--glass-blur);
+        "
+        onmouseover="this.style.color='var(--text-main)'; this.style.borderColor='var(--accent)';"
+        onmouseout="this.style.color='var(--text-muted)'; this.style.borderColor='var(--border-color)';">
+          <i data-lucide="chevrons-down" style="width:15px;height:15px;"></i>
+          Load ${Math.min(remaining, LOAD_MORE_SIZE)} more stories
+          <span style="font-size:0.72rem; opacity:0.6;">(${remaining} left)</span>
+        </button>
+      `;
+      feed.appendChild(wrapper);
+    }
+
+    function appendArticleCards(articlesList, startIdx) {
+      const feed = document.getElementById('live-news-feed');
+
+      const SOURCE_LABELS = {
+        'openai_blog': 'OpenAI', 'google_ai_blog': 'Google AI', 'deepmind_blog': 'DeepMind',
+        'anthropic_news': 'Anthropic', 'microsoft_ai_blog': 'Microsoft AI', 'meta_ai_blog': 'Meta AI',
+        'nvidia_ai_blog': 'NVIDIA', 'huggingface_blog': 'Hugging Face', 'techcrunch_ai': 'TechCrunch',
+        'venturebeat_ai': 'VentureBeat', 'mit_tech_review': 'MIT Tech', 'google_news_ai': 'Google News',
+        'arxiv': 'ArXiv', 'github_trending_ai': 'GitHub', 'producthunt_ai': 'Product Hunt',
+        'mistral_news': 'Mistral AI', 'xai_news': 'xAI', 'perplexity_blog': 'Perplexity',
+        'reuters_technology': 'Reuters'
+      };
+
+      articlesList.forEach((article, i) => {
+        const globalIdx = startIdx + i;
+        const sourceLabel = SOURCE_LABELS[article.source] || article.source;
+        const isOfficial = article.is_official;
+        const score = article.importance_score || 0;
+        const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+        const isOlderBatch = startIdx >= LIVE_PAGE;
+
+        const date = article.published_at
+          ? new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : 'Recently';
+
+        const desc = article.description
+          ? article.description.replace(/<[^>]*>/g, '').substring(0, 110) + '…'
+          : '';
+
+        const card = document.createElement('div');
+        card.className = 'article-card';
+        card.style.cursor = 'pointer';
+        // Slightly subdued opacity for older batch
+        if (isOlderBatch) card.style.opacity = '0.88';
+        card.onclick = () => openLiveArticleDrawer(article);
+
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span style="
+                background: ${isOfficial ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.06)'};
+                color: ${isOfficial ? '#818cf8' : 'var(--text-muted)'};
+                border: 1px solid ${isOfficial ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.1)'};
+                font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+              ">${isOfficial ? '⚡ ' : ''}${sourceLabel}</span>
+              ${globalIdx === 0 ? '<span style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:20px;">🔥 Top Pick</span>' : ''}
+            </div>
+            <span style="
+              background: rgba(0,0,0,0.2); color: ${scoreColor};
+              font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 8px;
+              white-space: nowrap;
+            ">★ ${Math.round(score)}</span>
+          </div>
+          <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${article.title}</div>
+          ${desc ? `<div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px;">${desc}</div>` : ''}
+          <div style="font-size: 0.72rem; color: var(--text-muted); display:flex; align-items:center; gap:4px;">
+            <i data-lucide="clock" style="width:11px;height:11px;"></i> ${date}
+            <span style="margin-left:auto; color:var(--accent); font-weight:600;">Tap to read →</span>
+          </div>
+        `;
+        feed.appendChild(card);
+      });
+    }
+
+    // --- Live Article Drawer ---
+    function openLiveArticleDrawer(article) {
+      const SOURCE_LABELS = {
+        'openai_blog': 'OpenAI Blog', 'google_ai_blog': 'Google AI Blog', 'deepmind_blog': 'DeepMind Blog',
+        'anthropic_news': 'Anthropic News', 'microsoft_ai_blog': 'Microsoft AI Blog', 'meta_ai_blog': 'Meta AI Blog',
+        'nvidia_ai_blog': 'NVIDIA Blog', 'huggingface_blog': 'Hugging Face Blog', 'techcrunch_ai': 'TechCrunch',
+        'venturebeat_ai': 'VentureBeat', 'mit_tech_review': 'MIT Technology Review', 'google_news_ai': 'Google News',
+        'arxiv': 'ArXiv Research', 'github_trending_ai': 'GitHub Trending', 'producthunt_ai': 'Product Hunt',
+        'mistral_news': 'Mistral AI Blog', 'xai_news': 'xAI Blog', 'perplexity_blog': 'Perplexity Blog',
+        'reuters_technology': 'Reuters Technology'
+      };
+
+      const sourceLabel = SOURCE_LABELS[article.source] || article.source;
+      const isOfficial = article.is_official;
+      const score = article.importance_score || 0;
+      const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+
+      const date = article.published_at
+        ? new Date(article.published_at).toLocaleString('en-US', {
+            weekday: 'long', month: 'long', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+          })
+        : 'Date unknown';
+
+      // Full description (cleaned of HTML tags)
+      const fullDesc = article.description
+        ? article.description.replace(/<[^>]*>/g, '').trim()
+        : 'No description available for this article.';
+
+      const domain = article.source_domain || new URL(article.url).hostname.replace('www.', '');
+
+      document.getElementById('drawer-content').innerHTML = `
+        <div class="drawer-header">
+          <!-- Source + score row -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="
+                background: ${isOfficial ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.06)'};
+                color: ${isOfficial ? '#818cf8' : 'var(--text-muted)'};
+                border: 1px solid ${isOfficial ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.1)'};
+                font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+              ">${isOfficial ? '⚡ ' : ''}${sourceLabel}</span>
+              ${isOfficial ? '<span style="font-size:0.7rem;color:#10b981;font-weight:600;">✓ Official Source</span>' : ''}
+            </div>
+            <span style="
+              background: rgba(0,0,0,0.3); color:${scoreColor};
+              font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:8px;
+            ">★ ${Math.round(score)} Importance</span>
+          </div>
+
+          <!-- Title -->
+          <div class="drawer-title" style="margin-bottom:10px;">${article.title}</div>
+
+          <!-- Date & domain -->
+          <div class="drawer-metadata">
+            <span style="display:flex;align-items:center;gap:4px;">
+              <i data-lucide="clock" style="width:12px;height:12px;"></i> ${date}
+            </span>
+            <span style="display:flex;align-items:center;gap:4px;">
+              <i data-lucide="globe" style="width:12px;height:12px;"></i> ${domain}
+            </span>
+          </div>
+        </div>
+
+        <div class="drawer-body">
+          <!-- Full description / summary -->
+          <div class="summary-section">
+            <div class="summary-title">What's This About</div>
+            <div style="font-size:0.88rem; line-height:1.7; color:var(--text-main);">
+              ${fullDesc}
+            </div>
+          </div>
+
+          ${article.official_company ? `
+          <div style="
+            display:flex; align-items:center; gap:10px;
+            padding:10px 14px;
+            background:rgba(99,102,241,0.08);
+            border:1px solid rgba(99,102,241,0.2);
+            border-radius:12px;
+          ">
+            <i data-lucide="building-2" style="width:16px;height:16px;color:#818cf8;flex-shrink:0;"></i>
+            <div>
+              <div style="font-size:0.72rem;color:#818cf8;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Official Company News</div>
+              <div style="font-size:0.85rem;font-weight:600;margin-top:1px;">${article.official_company}</div>
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Read full article CTA -->
+          <div style="padding-top:4px;">
+            <div style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-bottom:8px;">
+              This is a summary. Read the full story on the original source:
+            </div>
+            <a href="${article.url}" target="_blank" class="source-link-btn">
+              Read Full Article on ${domain}
+              <i data-lucide="external-link" style="width:16px;height:16px;"></i>
+            </a>
+          </div>
+        </div>
+      `;
+
+      async function renderBookmarks() {
+      const container = document.getElementById("bookmarks-feed");
+      container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading bookmarks...</div>`;
+      
+      const bookmarkedIds = Array.from(savedBookmarks);
+      
+      if (bookmarkedIds.length === 0) {
+        container.innerHTML = `
+          <div class="article-card" style="text-align: center; padding: 30px;">
+            <i data-lucide="bookmark-minus" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--text-muted);"></i>
+            <div style="font-weight: 600;">No bookmarks saved yet</div>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+      
+      try {
+        const fetchPromises = bookmarkedIds.map(id => authenticatedFetch('/api/v1/news/' + id).then(r => r.ok ? r.json() : null));
+        const results = await Promise.all(fetchPromises);
+        const validBookmarks = results.filter(r => r !== null);
+        
+        container.innerHTML = "";
+        validBookmarks.forEach(art => {
+          const trustVal = Math.round(art.trust_score || 50);
+          const card = document.createElement("div");
+          card.className = "article-card";
+          card.innerHTML = `
+            <div class="card-header">
+              <div class="source-chip"><i data-lucide="globe" style="width: 12px; height: 12px;"></i> ${art.source_domain || 'AI News'}</div>
+              <div class="trust-badge">${trustVal}% Trust</div>
+            </div>
+            <div class="card-title">${art.title}</div>
+            <div class="card-footer">
+              <div class="bookmark-btn ${savedBookmarks.has(art.id) ? 'active' : ''}" onclick="toggleBookmark(event, '${art.id}')">
+                <i data-lucide="bookmark" style="width: 18px; height: 18px;"></i>
+              </div>
+            </div>
+          `;
+          card.onclick = (e) => {
+            if (!e.target.closest('.bookmark-btn')) {
+              // Push to articles so openArticle can find it
+              if (!articles.find(a => a.id === art.id)) articles.push(art);
+              openArticle(art.id);
+            }
+          };
+          container.appendChild(card);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Error loading bookmarks:", err);
+      }
+    }
+
+    async function loadDailyBrief() {
+      const container = document.getElementById("brief-feed");
+      
+      try {
+        const res = await authenticatedFetch('/api/v1/news/daily-brief');
+        if (!res.ok) throw new Error("Failed to fetch daily brief");
+        const briefArticles = await res.json();
+        
+        if (briefArticles.length === 0) {
+          container.innerHTML = `
+            <div class="article-card" style="text-align: center; padding: 30px;">
+              <i data-lucide="coffee" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--accent);"></i>
+              <div style="font-weight: 600; font-size: 1rem;">No brief generated today</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">We couldn't find enough news matching your preferences today.</div>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+        
+        container.innerHTML = "";
+        briefArticles.forEach(art => {
+          const score = art.final_score || 0;
+          const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+          const card = document.createElement("div");
+          card.className = "article-card";
+          card.style.cursor = 'pointer';
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);"><i data-lucide="globe" style="width:12px; height:12px; display:inline;"></i> ${art.source_domain || 'AI News'}</span>
+              </div>
+              <span style="background:rgba(0,0,0,0.2); color:${scoreColor}; font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:8px;">★ ${Math.round(score)}</span>
+            </div>
+            <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${art.title}</div>
+            <div style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Tap to read →</div>
+          `;
+          card.onclick = () => {
+            if (!articles.find(a => a.id === art.id)) articles.push(art);
+            openArticle(art.id);
+          };
+          container.appendChild(card);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Error loading daily brief:", err);
+      }
+    }
+
+      document.getElementById('drawer-overlay').classList.add('active');
+      document.getElementById('detail-drawer').classList.add('active');
+      lucide.createIcons();
+    }
+
+    // --- Renderers ---
+    function renderFeed() {
+      const container = document.getElementById("articles-feed");
+      container.innerHTML = "";
+      
+      if (articles.length === 0) {
+        container.innerHTML = `
+          <div class="article-card" style="text-align: center; padding: 30px;">
+            <i data-lucide="inbox" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--text-muted);"></i>
+            <div style="font-weight: 600;">No articles found</div>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      articles.forEach(art => {
+        const score = art.final_score || art.trust_score || 0;
+        const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+        const card = document.createElement("div");
+        card.className = "article-card";
+        card.style.cursor = 'pointer';
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);"><i data-lucide="globe" style="width:12px; height:12px; display:inline;"></i> ${art.source_domain || 'AI News'}</span>
+            </div>
+            <span style="background:rgba(0,0,0,0.2); color:${scoreColor}; font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:8px;">★ ${Math.round(score)}</span>
+          </div>
+          <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${art.title}</div>
+          <div style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Tap to read →</div>
+        `;
+        card.onclick = () => {
+          openArticle(art.id);
+        };
+        container.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+
+    async function renderPreferences() {
+      // Topics (Goals)
+      const topicSelector = document.getElementById("topics-selector");
+      if (topicSelector) {
+        topicSelector.innerHTML = "";
+        const activeTopics = userPreferences?.favorite_topics || [];
+        availableTopics.forEach(topic => {
+          const activeClass = activeTopics.includes(topic) ? "active" : "";
+          const chip = document.createElement("div");
+          chip.className = `select-chip ${activeClass}`;
+          chip.innerText = topic;
+          chip.onclick = () => togglePrefTopic(topic);
+          topicSelector.appendChild(chip);
+        });
+      }
+
+      // Categories
+      const catSelector = document.getElementById("categories-selector");
+      catSelector.innerHTML = "";
+      const activeCats = userPreferences?.favorite_categories || [];
+      availableCategories.forEach(cat => {
+        const activeClass = activeCats.includes(cat) ? "active" : "";
+        const chip = document.createElement("div");
+        chip.className = `select-chip ${activeClass}`;
+        chip.innerText = cat;
+        chip.onclick = () => togglePrefCategory(cat);
+        catSelector.appendChild(chip);
+      });
+
+      // Companies
+      const compSelector = document.getElementById("companies-selector");
+      compSelector.innerHTML = "";
+      const activeComps = userPreferences?.favorite_companies || [];
+      availableCompanies.forEach(comp => {
+        const activeClass = activeComps.includes(comp) ? "active" : "";
+        const chip = document.createElement("div");
+        chip.className = `select-chip ${activeClass}`;
+        chip.innerText = comp;
+        chip.onclick = () => togglePrefCompany(comp);
+        compSelector.appendChild(chip);
+      });
+    }
+
+    // --- Interactive Callbacks ---
+    async function updateProfileName(name) {
+      if (!name.trim()) return;
+      try {
+        const res = await authenticatedFetch('/api/v1/users/me', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ display_name: name })
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          document.getElementById("profile-initials").innerText = name.split(" ").map(n => n[0]).join("").toUpperCase();
+        }
+      } catch (err) {
+        console.error("Error updating name:", err);
+      }
+    }
+
+    async function togglePrefTopic(topic) {
+      if (!userPreferences) return;
+      let topics = [...(userPreferences.favorite_topics || [])];
+      if (topics.includes(topic)) {
+        topics = topics.filter(t => t !== topic);
+      } else {
+        topics.push(topic);
+      }
+      userPreferences.favorite_topics = topics;
+      await savePreferences();
+      renderPreferences();
+    }
+
+    async function togglePrefCategory(cat) {
+      if (!userPreferences) return;
+      let cats = [...(userPreferences.favorite_categories || [])];
+      if (cats.includes(cat)) {
+        cats = cats.filter(c => c !== cat);
+      } else {
+        cats.push(cat);
+      }
+      userPreferences.favorite_categories = cats;
+      await savePreferences();
+      renderPreferences();
+    }
+
+    async function togglePrefCompany(comp) {
+      if (!userPreferences) return;
+      let comps = [...(userPreferences.favorite_companies || [])];
+      if (comps.includes(comp)) {
+        comps = comps.filter(c => c !== comp);
+      } else {
+        comps.push(comp);
+      }
+      userPreferences.favorite_companies = comps;
+      await savePreferences();
+      renderPreferences();
+    }
+
+    async function savePreferences() {
+      try {
+        await authenticatedFetch('/api/v1/preferences', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            favorite_categories: userPreferences.favorite_categories,
+            favorite_companies: userPreferences.favorite_companies,
+            favorite_topics: userPreferences.favorite_topics || [],
+            blocked_topics: userPreferences.blocked_topics || [],
+            bookmarked_articles: Array.from(savedBookmarks)
+          })
+        });
+      } catch (err) {
+        console.error("Error saving preferences:", err);
+      }
+    }
+
+    async function toggleBookmark(event, articleId) {
+      event.stopPropagation();
+      const btn = event.currentTarget;
+      if (savedBookmarks.has(articleId)) {
+        savedBookmarks.delete(articleId);
+        btn.classList.remove("active");
+      } else {
+        savedBookmarks.add(articleId);
+        btn.classList.add("active");
+      }
+      if (document.getElementById("view-bookmarks").classList.contains("active")) {
+        renderBookmarks();
+      }
+      // Persist to backend
+      await savePreferences();
+    }
+
+    // --- Drawer Control ---
+    function openArticle(articleId) {
+      const art = articles.find(a => a.id === articleId);
+      if (!art) return;
+      
+      const drawerContent = document.getElementById("drawer-content");
+      
+      // Default placeholder details
+      const categoryStr = "AI Tech";
+      const summaryBullets = art.description ? [art.description] : ["No summary available."];
+      
+      drawerContent.innerHTML = `
+        <div class="drawer-header">
+          <div class="drawer-metadata">
+            <span><i data-lucide="globe" style="width: 12px; height: 12px; display:inline-block; vertical-align: middle;"></i> ${art.source_domain}</span>
+            <span>${Math.round(art.trust_score || 50)}% Trust Score</span>
+          </div>
+          <h2 class="drawer-title">${art.title}</h2>
+        </div>
+        <div class="drawer-body">
+          <div class="summary-section">
+            <h3 class="summary-title">Summary Brief</h3>
+            ${summaryBullets.map(b => `<div class="summary-bullet">• ${b}</div>`).join("")}
+          </div>
+          <div>
+            <h3 class="summary-title" style="font-size: 0.85rem; margin-bottom: 5px;">Source Relevance</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">This canonical news item has been verified across trusted repositories. Score compiled from primary validation checks.</p>
+          </div>
+          <a href="${art.url}" target="_blank" class="source-link-btn">
+            Read Full Article <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+          </a>
+        </div>
+      `;
+      
+      document.getElementById("drawer-overlay").classList.add("active");
+      document.getElementById("detail-drawer").classList.add("active");
+      lucide.createIcons();
+    }
+
+    function closeDrawer() {
+      document.getElementById("drawer-overlay").classList.remove("active");
+      document.getElementById("detail-drawer").classList.remove("active");
+    }
+  </script>
+</body>
+</html>

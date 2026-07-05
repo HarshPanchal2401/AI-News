@@ -1,0 +1,71 @@
+# =============================================================================
+# AI Pulse – Backend Dependencies
+# Python 3.12+
+# =============================================================================
+
+# ── Web Framework ──────────────────────────────────────────────────────────────
+fastapi
+uvicorn
+python-multipart
+
+# ── Database ───────────────────────────────────────────────────────────────────
+sqlalchemy
+asyncpg
+alembic
+psycopg2-binary
+
+# ── Validation ─────────────────────────────────────────────────────────────────
+pydantic
+pydantic-settings
+email-validator
+
+# ── Authentication ─────────────────────────────────────────────────────────────
+python-jose[cryptography]
+passlib[bcrypt]
+
+# ── HTTP Client ────────────────────────────────────────────────────────────────
+httpx
+aiohttp
+tenacity
+
+# ── News Fetching ──────────────────────────────────────────────────────────────
+feedparser
+beautifulsoup4
+lxml
+
+# ── AI (Gemini) ────────────────────────────────────────────────────────────────
+google-generativeai
+google-auth
+
+# ── Notifications (Firebase) ───────────────────────────────────────────────────
+firebase-admin
+
+# ── Cache (Upstash Redis) ──────────────────────────────────────────────────────
+upstash-redis
+
+# ── Scheduler ──────────────────────────────────────────────────────────────────
+apscheduler
+
+# ── Logging ────────────────────────────────────────────────────────────────────
+structlog
+python-json-logger
+
+# ── Monitoring ─────────────────────────────────────────────────────────────────
+prometheus-fastapi-instrumentator
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
+python-dotenv
+python-dateutil
+pytz
+numpy
+scikit-learn
+
+# ── Testing ────────────────────────────────────────────────────────────────────
+pytest
+pytest-asyncio
+pytest-cov
+httpx
+factory-boy
+faker
+respx
+

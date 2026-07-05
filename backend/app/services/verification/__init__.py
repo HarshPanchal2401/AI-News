@@ -1,0 +1,1 @@
+"""AI Pulse – Verification package."""
