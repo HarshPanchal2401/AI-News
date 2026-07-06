@@ -1,7 +1,8 @@
 """
-AI Pulse – Category, Bookmark, DailyBrief, and Notification Models
+AI News Intelligence Engine – Category, Bookmark, DailyBrief, Notification,
+NewsEvent, and Trend Models
 ====================================================================
-Remaining domain models for the application.
+All domain models for the application.
 """
 
 from __future__ import annotations
@@ -236,8 +237,10 @@ class Notification(BaseModel):
     user: Mapped["User"] = relationship("User", back_populates="notifications")
 
 
-# ── Register all other models with SQLAlchemy ───────────────────────────────
+# ── Register all models with SQLAlchemy ──────────────────────────────────
 from app.models.user import User, UserPreferences
+from app.models.news_event import NewsEvent
 from app.models.news_article import NewsArticle
 from app.models.news_source import NewsSource
 from app.models.news_analysis import NewsAnalysis
+from app.models.trend import Trend

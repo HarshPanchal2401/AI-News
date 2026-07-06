@@ -172,3 +172,31 @@ async def fetch_text(
     """Convenience wrapper that fetches and returns response text."""
     response = await fetch_with_retry(url, source_name, headers=headers)
     return response.text
+
+
+async def scrape_article_text(url: str) -> str:
+    """
+    Scrape the full body content of an article URL, cleaning HTML boilerplate.
+    Returns parsed plain text.
+    """
+    from bs4 import BeautifulSoup
+    try:
+        response = await fetch_with_retry(url, source_name="scraper", max_retries=1)
+        if response.status_code != 200:
+            return ""
+        
+        soup = BeautifulSoup(response.text, "html.parser")
+        
+        # Clean soup
+        for element in soup(["script", "style", "nav", "footer", "header", "noscript", "aside", "form"]):
+            element.decompose()
+            
+        # Extract paragraph tags
+        paragraphs = soup.find_all("p")
+        text = "\n\n".join([p.get_text().strip() for p in paragraphs if len(p.get_text().strip()) > 30])
+        
+        # Limit text length to 10,000 characters
+        return text[:10000]
+    except Exception as exc:
+        logger.warning("scrape_article_text_failed", url=url, error=str(exc))
+        return ""

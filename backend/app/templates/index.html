@@ -597,6 +597,25 @@
       border-color: var(--accent) !important;
       background: rgba(255, 255, 255, 0.05) !important;
     }
+    
+    /* Premium Switch Slider */
+    .switch-container input:checked + .slider {
+      background-color: var(--accent) !important;
+    }
+    .switch-container .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    .switch-container input:checked + .slider:before {
+      transform: translateX(20px);
+    }
   </style>
 </head>
 <body>
@@ -756,57 +775,202 @@
     </div>
 
     <!-- ── Profile / Preferences View ── -->
-    <div class="content-area view-panel" id="view-profile">
-      <div class="section-title">Preferences <i data-lucide="settings" style="color: var(--accent); width: 18px; height: 18px;"></i></div>
-      
-      <div class="profile-avatar-area">
-        <div class="avatar-mock" id="profile-initials">HP</div>
-        <input type="text" class="profile-name-input" id="profile-name" value="Harsh Panchal" onchange="updateProfileName(this.value)">
-      </div>
-
-      <div class="preference-group" style="margin-top: 10px;">
-        <div class="pref-title">News Goals <span style="text-transform: none; font-size: 0.75rem; font-weight: normal; margin-left: 5px;">(What are you looking for?)</span></div>
-        <div class="chip-selector" id="topics-selector">
-          <!-- Populated dynamically -->
+    <div class="content-area view-panel" id="view-profile" style="padding-bottom: 100px;">
+      <!-- Profile Header Card -->
+      <div class="profile-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 24px 16px; margin-bottom: 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; position: relative;">
+        <div style="position: relative;">
+          <div class="avatar-mock" id="profile-initials" style="margin: 0; width: 80px; height: 80px; font-size: 1.8rem; border-radius: 50%;">HP</div>
+          <button onclick="document.getElementById('profile-name').focus()" style="position: absolute; bottom: 0; right: 0; background: var(--accent); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+          </button>
+        </div>
+        <div style="width: 100%;">
+          <input type="text" class="profile-name-input" id="profile-name" value="Harsh Panchal" style="width: 100%; text-align: center; font-size: 1.25rem; font-weight: 700; margin-bottom: 4px;" onchange="updateProfileName(this.value)">
+          <div id="profile-email" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">harshpanchal@email.com</div>
+          <span style="background: rgba(99, 102, 241, 0.15); color: #818cf8; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">★ Premium</span>
         </div>
       </div>
 
-      <div class="preference-group">
-        <div class="pref-title">Followed Categories</div>
-        <div class="chip-selector" id="categories-selector">
-          <!-- Populated dynamically -->
+      <!-- Preferences Collapsible Section -->
+      <div style="margin-bottom: 24px;">
+        <div style="font-family: var(--font-header); font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="sliders" style="width: 16px; height: 16px; color: var(--accent);"></i> Preferences
+        </div>
+        
+        <!-- Accordion Cards -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- 1. News Goals -->
+          <div class="pref-accordion-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
+            <div onclick="toggleAccordion('goals')" style="padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: var(--accent);">
+                  <i data-lucide="target" style="width: 16px; height: 16px;"></i>
+                </div>
+                <div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">News Goals</div>
+                  <div id="goals-count" style="font-size: 0.75rem; color: var(--text-muted);">0 selected</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button onclick="event.stopPropagation(); expandAccordion('goals')" style="background: transparent; border: none; color: var(--accent); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Edit</button>
+                <i id="goals-arrow" data-lucide="chevron-down" style="width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.3s;"></i>
+              </div>
+            </div>
+            <div id="goals-body" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 0 solid var(--border-color);">
+              <div style="padding: 16px;" id="topics-selector" class="chip-selector">
+                <!-- All chips populated dynamically -->
+              </div>
+            </div>
+            <div id="goals-collapsed-chips" style="padding: 0 16px 16px 16px; display: flex; flex-wrap: wrap; gap: 6px;">
+              <!-- First 5 selected chips shown here when collapsed -->
+            </div>
+          </div>
+
+          <!-- 2. Followed Categories -->
+          <div class="pref-accordion-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
+            <div onclick="toggleAccordion('categories')" style="padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: var(--accent);">
+                  <i data-lucide="layout" style="width: 16px; height: 16px;"></i>
+                </div>
+                <div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">Followed Categories</div>
+                  <div id="categories-count" style="font-size: 0.75rem; color: var(--text-muted);">0 selected</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button onclick="event.stopPropagation(); expandAccordion('categories')" style="background: transparent; border: none; color: var(--accent); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Edit</button>
+                <i id="categories-arrow" data-lucide="chevron-down" style="width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.3s;"></i>
+              </div>
+            </div>
+            <div id="categories-body" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 0 solid var(--border-color);">
+              <div style="padding: 16px;" id="categories-selector" class="chip-selector">
+                <!-- All chips populated dynamically -->
+              </div>
+            </div>
+            <div id="categories-collapsed-chips" style="padding: 0 16px 16px 16px; display: flex; flex-wrap: wrap; gap: 6px;">
+              <!-- First 5 selected chips shown here when collapsed -->
+            </div>
+          </div>
+
+          <!-- 3. Followed Companies -->
+          <div class="pref-accordion-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
+            <div onclick="toggleAccordion('companies')" style="padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; color: var(--accent);">
+                  <i data-lucide="building-2" style="width: 16px; height: 16px;"></i>
+                </div>
+                <div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-main);">Followed Companies</div>
+                  <div id="companies-count" style="font-size: 0.75rem; color: var(--text-muted);">0 selected</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <button onclick="event.stopPropagation(); expandAccordion('companies')" style="background: transparent; border: none; color: var(--accent); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Edit</button>
+                <i id="companies-arrow" data-lucide="chevron-down" style="width: 18px; height: 18px; color: var(--text-muted); transition: transform 0.3s;"></i>
+              </div>
+            </div>
+            <div id="companies-body" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 0 solid var(--border-color);">
+              <div style="padding: 16px;" id="companies-selector" class="chip-selector">
+                <!-- All chips populated dynamically -->
+              </div>
+            </div>
+            <div id="companies-collapsed-chips" style="padding: 0 16px 16px 16px; display: flex; flex-wrap: wrap; gap: 6px;">
+              <!-- First 5 selected chips shown here when collapsed -->
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="preference-group">
-        <div class="pref-title">Followed Companies</div>
-        <div class="chip-selector" id="companies-selector">
-          <!-- Populated dynamically -->
+      <!-- Settings Section -->
+      <div>
+        <div style="font-family: var(--font-header); font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="settings" style="width: 16px; height: 16px; color: var(--accent);"></i> Settings
         </div>
-      </div>
+        
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 4px 0; display: flex; flex-direction: column;">
+          
+          <!-- Notifications Toggle Tile -->
+          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="bell" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Notifications</span>
+            </div>
+            <label class="switch-container" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+              <input type="checkbox" id="settings-notifications" style="opacity: 0; width: 0; height: 0;" onchange="toggleNotificationPref(this.checked)">
+              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .3s; border-radius: 34px;"></span>
+            </label>
+          </div>
+          
+          <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
 
-      <!-- Logout Button -->
-      <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-        <button onclick="handleLogout()" style="
-          width: 100%;
-          padding: 12px;
-          border: 1px solid rgba(239, 68, 68, 0.4);
-          border-radius: 10px;
-          background: rgba(239, 68, 68, 0.08);
-          color: #ef4444;
-          font-family: var(--font-primary);
-          font-size: 0.85rem;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          transition: background 0.2s, transform 0.1s;
-        " onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='rgba(239,68,68,0.08)'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-          <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
-          Logout Account
-        </button>
+          <!-- Dark Theme Toggle Tile -->
+          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="moon" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Dark Theme Only</span>
+            </div>
+            <span style="font-size: 0.8rem; color: var(--accent); font-weight: 600;">Enabled</span>
+          </div>
+
+          <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
+
+          <!-- Language -->
+          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="languages" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Language</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 0.8rem;">
+              <span>English (US)</span>
+              <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+            </div>
+          </div>
+
+          <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
+
+          <!-- Privacy -->
+          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="shield-check" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Privacy Policy</span>
+            </div>
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+          </div>
+
+          <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
+
+          <!-- About -->
+          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="info" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">About</span>
+            </div>
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+          </div>
+
+          <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
+
+          <!-- Help & Support -->
+          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="help-circle" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Help & Support</span>
+            </div>
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+          </div>
+
+          <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
+
+          <!-- Logout -->
+          <div onclick="handleLogout()" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px; color: #ef4444;">
+              <i data-lucide="log-out" style="width: 18px; height: 18px; color: #ef4444;"></i>
+              <span style="font-size: 0.9rem; font-weight: 600;">Logout Account</span>
+            </div>
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: #ef4444;"></i>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -837,6 +1001,9 @@
       <div class="drawer-handle" onclick="closeDrawer()"></div>
       <div class="drawer-content" id="drawer-content">
         <!-- Filled dynamically -->
+      </div>
+      <div id="drawer-sticky-bottom" style="padding: 16px 24px; border-top: 1px solid var(--border-color); background: var(--bg-mobile); display: none; z-index: 10;">
+        <!-- Sticky CTA button -->
       </div>
     </div>
 
@@ -1492,13 +1659,52 @@
 
     async function loadDailyBrief() {
       const container = document.getElementById("brief-feed");
+      container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading briefs...</div>`;
       
       try {
+        // Fetch Weekly Brief first
+        let weeklyHTML = "";
+        try {
+          const weeklyRes = await authenticatedFetch('/api/v1/intelligence/weekly-brief');
+          if (weeklyRes.ok) {
+            const weeklyBrief = await weeklyRes.json();
+            weeklyHTML = `
+              <div class="article-card" style="background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(168,85,247,0.12) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; margin-bottom: 20px; padding: 16px; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -10px; right: -10px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%); pointer-events: none;"></div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                  <span style="background:var(--accent-gradient); color:#fff; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; padding:3px 10px; border-radius:30px; display:inline-flex; align-items:center; gap:4px;">
+                    <i data-lucide="sparkles" style="width:10px; height:10px;"></i> Brief of the Week
+                  </span>
+                  <span style="font-size:0.7rem; color:var(--text-muted);">Rolling 7-day executive summary</span>
+                </div>
+                <div style="font-size: 0.88rem; line-height: 1.6; color: var(--text-main); font-weight: 500; margin-bottom: 12px;">
+                  ${weeklyBrief.summary}
+                </div>
+                ${weeklyBrief.events && weeklyBrief.events.length > 0 ? `
+                  <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 8px;">
+                    <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.5px;">Top Weekly Events</div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                      ${weeklyBrief.events.map(ev => `
+                        <div class="weekly-event-item" style="font-size:0.82rem; color:var(--text-main); display:flex; align-items:center; gap:6px; cursor:pointer; padding:4px 0;" onclick="event.stopPropagation(); openWeeklyEventDetail('${ev.id}')">
+                          <span style="color:var(--accent); font-weight:bold;">★</span>
+                          <span style="text-decoration: underline; text-underline-offset: 2px;">${ev.headline}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }
+        } catch (weeklyErr) {
+          console.error("Error loading weekly brief:", weeklyErr);
+        }
+
         const res = await authenticatedFetch('/api/v1/news/daily-brief');
         if (!res.ok) throw new Error("Failed to fetch daily brief");
         const briefArticles = await res.json();
         
-        if (briefArticles.length === 0) {
+        if (briefArticles.length === 0 && !weeklyHTML) {
           container.innerHTML = `
             <div class="article-card" style="text-align: center; padding: 30px;">
               <i data-lucide="coffee" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--accent);"></i>
@@ -1510,29 +1716,37 @@
           return;
         }
         
-        container.innerHTML = "";
-        briefArticles.forEach(art => {
-          const score = art.final_score || 0;
-          const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
-          const card = document.createElement("div");
-          card.className = "article-card";
-          card.style.cursor = 'pointer';
-          card.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);"><i data-lucide="globe" style="width:12px; height:12px; display:inline;"></i> ${art.source_domain || 'AI News'}</span>
+        container.innerHTML = weeklyHTML;
+        
+        if (briefArticles.length > 0) {
+          const sectionHeader = document.createElement("div");
+          sectionHeader.style.cssText = "font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin: 15px 0 10px 0; letter-spacing:0.5px;";
+          sectionHeader.innerText = "Your Personalized Daily Brief";
+          container.appendChild(sectionHeader);
+
+          briefArticles.forEach(art => {
+            const score = art.final_score || 0;
+            const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+            const card = document.createElement("div");
+            card.className = "article-card";
+            card.style.cursor = 'pointer';
+            card.innerHTML = `
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);"><i data-lucide="globe" style="width:12px; height:12px; display:inline;"></i> ${art.source_domain || 'AI News'}</span>
+                </div>
+                <span style="background:rgba(0,0,0,0.2); color:${scoreColor}; font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:8px;">★ ${Math.round(score)}</span>
               </div>
-              <span style="background:rgba(0,0,0,0.2); color:${scoreColor}; font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:8px;">★ ${Math.round(score)}</span>
-            </div>
-            <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${art.title}</div>
-            <div style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Tap to read →</div>
-          `;
-          card.onclick = () => {
-            if (!articles.find(a => a.id === art.id)) articles.push(art);
-            openArticle(art.id);
-          };
-          container.appendChild(card);
-        });
+              <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${art.title}</div>
+              <div style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Tap to read →</div>
+            `;
+            card.onclick = () => {
+              if (!articles.find(a => a.id === art.id)) articles.push(art);
+              openArticle(art.id);
+            };
+            container.appendChild(card);
+          });
+        }
         lucide.createIcons();
       } catch (err) {
         console.error("Error loading daily brief:", err);
@@ -1585,12 +1799,98 @@
     }
 
 
+    // Accordion State and Helpers
+    const accordionStates = {
+      goals: false,
+      categories: false,
+      companies: false
+    };
+
+    function toggleAccordion(name) {
+      const body = document.getElementById(`${name}-body`);
+      const arrow = document.getElementById(`${name}-arrow`);
+      if (!body) return;
+      const isExpanded = accordionStates[name];
+      
+      if (isExpanded) {
+        body.style.maxHeight = "0";
+        body.style.borderTopWidth = "0px";
+        if (arrow) arrow.style.transform = "rotate(0deg)";
+        accordionStates[name] = false;
+        updateCollapsedChips(name);
+      } else {
+        body.style.maxHeight = body.scrollHeight + "px";
+        body.style.borderTopWidth = "1px";
+        if (arrow) arrow.style.transform = "rotate(180deg)";
+        accordionStates[name] = true;
+        document.getElementById(`${name}-collapsed-chips`).innerHTML = "";
+      }
+    }
+
+    function expandAccordion(name) {
+      if (!accordionStates[name]) {
+        toggleAccordion(name);
+      }
+      setTimeout(() => {
+        const body = document.getElementById(`${name}-body`);
+        if (body) body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 150);
+    }
+
+    function updateCollapsedChips(name) {
+      const collapsedContainer = document.getElementById(`${name}-collapsed-chips`);
+      if (!collapsedContainer) return;
+      if (accordionStates[name]) {
+        collapsedContainer.innerHTML = "";
+        return;
+      }
+      
+      let selected = [];
+      if (name === 'goals') selected = userPreferences?.favorite_topics || [];
+      else if (name === 'categories') selected = userPreferences?.favorite_categories || [];
+      else if (name === 'companies') selected = userPreferences?.favorite_companies || [];
+      
+      if (selected.length === 0) {
+        collapsedContainer.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted);">None selected</span>`;
+        return;
+      }
+      
+      const first5 = selected.slice(0, 5);
+      const remaining = selected.length - 5;
+      
+      let html = first5.map(item => `
+        <span style="font-size: 0.72rem; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 500;">
+          ${item}
+        </span>
+      `).join("");
+      
+      if (remaining > 0) {
+        html += `
+          <span style="font-size: 0.72rem; padding: 4px 10px; border-radius: 8px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); color: var(--accent); font-weight: 600;">
+            +${remaining} More
+          </span>
+        `;
+      }
+      
+      collapsedContainer.innerHTML = html;
+    }
+
+    function toggleNotificationPref(enabled) {
+      console.log("Notification status toggled:", enabled);
+    }
+
     async function renderPreferences() {
+      // Set email in profile card
+      if (userProfile && userProfile.email) {
+        const emailEl = document.getElementById("profile-email");
+        if (emailEl) emailEl.innerText = userProfile.email;
+      }
+
       // Topics (Goals)
       const topicSelector = document.getElementById("topics-selector");
+      const activeTopics = userPreferences?.favorite_topics || [];
       if (topicSelector) {
         topicSelector.innerHTML = "";
-        const activeTopics = userPreferences?.favorite_topics || [];
         availableTopics.forEach(topic => {
           const activeClass = activeTopics.includes(topic) ? "active" : "";
           const chip = document.createElement("div");
@@ -1600,32 +1900,45 @@
           topicSelector.appendChild(chip);
         });
       }
+      const goalsCountEl = document.getElementById("goals-count");
+      if (goalsCountEl) goalsCountEl.innerText = `${activeTopics.length} selected`;
+      updateCollapsedChips("goals");
 
       // Categories
       const catSelector = document.getElementById("categories-selector");
-      catSelector.innerHTML = "";
       const activeCats = userPreferences?.favorite_categories || [];
-      availableCategories.forEach(cat => {
-        const activeClass = activeCats.includes(cat) ? "active" : "";
-        const chip = document.createElement("div");
-        chip.className = `select-chip ${activeClass}`;
-        chip.innerText = cat;
-        chip.onclick = () => togglePrefCategory(cat);
-        catSelector.appendChild(chip);
-      });
+      if (catSelector) {
+        catSelector.innerHTML = "";
+        availableCategories.forEach(cat => {
+          const activeClass = activeCats.includes(cat) ? "active" : "";
+          const chip = document.createElement("div");
+          chip.className = `select-chip ${activeClass}`;
+          chip.innerText = cat;
+          chip.onclick = () => togglePrefCategory(cat);
+          catSelector.appendChild(chip);
+        });
+      }
+      const categoriesCountEl = document.getElementById("categories-count");
+      if (categoriesCountEl) categoriesCountEl.innerText = `${activeCats.length} selected`;
+      updateCollapsedChips("categories");
 
       // Companies
       const compSelector = document.getElementById("companies-selector");
-      compSelector.innerHTML = "";
       const activeComps = userPreferences?.favorite_companies || [];
-      availableCompanies.forEach(comp => {
-        const activeClass = activeComps.includes(comp) ? "active" : "";
-        const chip = document.createElement("div");
-        chip.className = `select-chip ${activeClass}`;
-        chip.innerText = comp;
-        chip.onclick = () => togglePrefCompany(comp);
-        compSelector.appendChild(chip);
-      });
+      if (compSelector) {
+        compSelector.innerHTML = "";
+        availableCompanies.forEach(comp => {
+          const activeClass = activeComps.includes(comp) ? "active" : "";
+          const chip = document.createElement("div");
+          chip.className = `select-chip ${activeClass}`;
+          chip.innerText = comp;
+          chip.onclick = () => togglePrefCompany(comp);
+          compSelector.appendChild(chip);
+        });
+      }
+      const companiesCountEl = document.getElementById("companies-count");
+      if (companiesCountEl) companiesCountEl.innerText = `${activeComps.length} selected`;
+      updateCollapsedChips("companies");
     }
 
     // --- Interactive Callbacks ---
@@ -1704,64 +2017,470 @@
     }
 
     async function toggleBookmark(event, articleId) {
-      event.stopPropagation();
-      const btn = event.currentTarget;
+      if (event) event.stopPropagation();
+      const btn = document.getElementById(`bookmark-btn-detail`);
+      const cardBtn = document.getElementById(`bookmark-card-${articleId}`);
+      
       if (savedBookmarks.has(articleId)) {
         savedBookmarks.delete(articleId);
-        btn.classList.remove("active");
+        if (btn) btn.classList.remove("active");
+        if (cardBtn) cardBtn.classList.remove("active");
       } else {
         savedBookmarks.add(articleId);
-        btn.classList.add("active");
+        if (btn) btn.classList.add("active");
+        if (cardBtn) cardBtn.classList.add("active");
       }
       if (document.getElementById("view-bookmarks").classList.contains("active")) {
         renderBookmarks();
       }
-      // Persist to backend
       await savePreferences();
     }
 
+    // Offline Save state
+    const offlineSavedArticles = new Set();
+    function toggleOfflineSave(articleId) {
+      const btn = document.getElementById("offline-btn-detail");
+      if (offlineSavedArticles.has(articleId)) {
+        offlineSavedArticles.delete(articleId);
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="download" style="width:14px;height:14px;"></i> Save Offline`;
+          btn.style.color = "var(--text-muted)";
+        }
+      } else {
+        offlineSavedArticles.add(articleId);
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="check-circle" style="width:14px;height:14px;"></i> Saved Offline`;
+          btn.style.color = "var(--success)";
+        }
+      }
+      lucide.createIcons();
+    }
+
+    // Text to Speech
+    let ttsUtterance = null;
+    let isSpeaking = false;
+    function speakText(text) {
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        const btn = document.getElementById("tts-btn");
+        if (btn) btn.innerHTML = `<i data-lucide="volume-2" style="width:14px;height:14px;"></i> Listen`;
+        lucide.createIcons();
+        return;
+      }
+      
+      ttsUtterance = new SpeechSynthesisUtterance(text);
+      ttsUtterance.onend = () => {
+        isSpeaking = false;
+        const btn = document.getElementById("tts-btn");
+        if (btn) btn.innerHTML = `<i data-lucide="volume-2" style="width:14px;height:14px;"></i> Listen`;
+        lucide.createIcons();
+      };
+      
+      window.speechSynthesis.speak(ttsUtterance);
+      isSpeaking = true;
+      const btn = document.getElementById("tts-btn");
+      if (btn) btn.innerHTML = `<i data-lucide="volume-x" style="width:14px;height:14px;"></i> Stop`;
+      lucide.createIcons();
+    }
+
+    // Share summary
+    function shareText(title, url) {
+      if (navigator.share) {
+        navigator.share({ title: title, url: url }).catch(err => console.log(err));
+      } else {
+        navigator.clipboard.writeText(`${title} - Read more at ${url}`);
+        alert("Link copied to clipboard!");
+      }
+    }
+
+    // Translation simulation
+    function translateSummaryUI(originalText, targetLang) {
+      const summaryTextEl = document.getElementById("ai-summary-text-box");
+      if (!summaryTextEl) return;
+      
+      const translations = {
+        es: "Resumen Ejecutivo de IA: Este artículo detalla los últimos avances en inteligencia artificial, analizando las métricas clave y las tecnologías presentadas en el evento del sector. Las implicaciones competitivas sugieren un cambio de paradigma para desarrolladores y startups.",
+        fr: "Résumé Exécutif de l'IA: Cet article détaille les dernières avancées en matière d'intelligence artificielle, en analysant las mesures clés et les technologies présentées lors de l'événement de l'industrie. Les implications concurrentielles suggèrent un changement de paradigme pour les développeurs et les startups.",
+        de: "KI-Executive Summary: Dieser Artikel beschreibt die neuesten Fortschritte im Bereich der künstlichen Intelligenz und analysiert die wichtigsten Metriken und Technologien, die auf dem Branchenevent vorgestellt wurden. Die wettbewerbsrechtlichen Auswirkungen deuten auf einen Paradigmenwechsel für Entwickler und Startups hin."
+      };
+      
+      summaryTextEl.innerText = translations[targetLang] || originalText;
+    }
+
     // --- Drawer Control ---
-    function openArticle(articleId) {
-      const art = articles.find(a => a.id === articleId);
-      if (!art) return;
-      
+    async function openArticle(articleId) {
+      const localArt = articles.find(a => a.id === articleId);
       const drawerContent = document.getElementById("drawer-content");
-      
-      // Default placeholder details
-      const categoryStr = "AI Tech";
-      const summaryBullets = art.description ? [art.description] : ["No summary available."];
-      
-      drawerContent.innerHTML = `
-        <div class="drawer-header">
-          <div class="drawer-metadata">
-            <span><i data-lucide="globe" style="width: 12px; height: 12px; display:inline-block; vertical-align: middle;"></i> ${art.source_domain}</span>
-            <span>${Math.round(art.trust_score || 50)}% Trust Score</span>
-          </div>
-          <h2 class="drawer-title">${art.title}</h2>
-        </div>
-        <div class="drawer-body">
-          <div class="summary-section">
-            <h3 class="summary-title">Summary Brief</h3>
-            ${summaryBullets.map(b => `<div class="summary-bullet">• ${b}</div>`).join("")}
-          </div>
-          <div>
-            <h3 class="summary-title" style="font-size: 0.85rem; margin-bottom: 5px;">Source Relevance</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">This canonical news item has been verified across trusted repositories. Score compiled from primary validation checks.</p>
-          </div>
-          <a href="${art.url}" target="_blank" class="source-link-btn">
-            Read Full Article <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
-          </a>
-        </div>
-      `;
       
       document.getElementById("drawer-overlay").classList.add("active");
       document.getElementById("detail-drawer").classList.add("active");
+      
+      // Calculate reading time
+      const wordCount = localArt?.content_snippet ? localArt.content_snippet.split(/\s+/).length : 200;
+      const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+      if (localArt) {
+        drawerContent.innerHTML = `
+          <!-- Top Navigation Header -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border-color);">
+            <button onclick="closeDrawer()" style="background:transparent; border:none; color:var(--text-main); display:flex; align-items:center; justify-content:center; cursor:pointer; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.03);">
+              <i data-lucide="arrow-left" style="width:18px; height:18px;"></i>
+            </button>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button id="offline-btn-detail" onclick="toggleOfflineSave('${articleId}')" style="background:transparent; border:none; color:var(--text-muted); display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; font-weight:600; padding:6px 12px; border-radius:12px; background:rgba(255,255,255,0.03);">
+                <i data-lucide="download" style="width:14px; height:14px;"></i> Save Offline
+              </button>
+              <button id="bookmark-btn-detail" onclick="toggleBookmark(event, '${articleId}')" class="bookmark-btn ${savedBookmarks.has(articleId) ? 'active' : ''}" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.03); border:none; display:flex; align-items:center; justify-content:center;">
+                <i data-lucide="bookmark" style="width:18px; height:18px;"></i>
+              </button>
+              <button onclick="shareText('${localArt.title.replace(/'/g, "\\'")}', '${localArt.url}')" style="background:transparent; border:none; color:var(--text-main); display:flex; align-items:center; justify-content:center; cursor:pointer; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.03);">
+                <i data-lucide="share-2" style="width:18px; height:18px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- News Header -->
+          <div class="drawer-header" style="margin-bottom:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+              <span style="background:rgba(99,102,241,0.1); color:#818cf8; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:20px; border:1px solid rgba(99,102,241,0.2);">
+                ${localArt.category || 'AI News'}
+              </span>
+              <span style="background:rgba(16,185,129,0.1); color:#10b981; font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:8px; border:1px solid rgba(16,185,129,0.2);">
+                ★ ${Math.round(localArt.final_score || 75)} Importance
+              </span>
+            </div>
+            <h2 class="drawer-title" style="margin-bottom:12px; font-size:1.45rem; line-height:1.35; font-family:var(--font-header); font-weight:700;">${localArt.title}</h2>
+            <div class="drawer-metadata" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:0.8rem; color:var(--text-muted);">
+              <span style="display:flex;align-items:center;gap:4px;"><i data-lucide="clock" style="width:14px;height:14px;"></i> ${readingTime} min read</span>
+              <span style="display:flex;align-items:center;gap:4px;"><i data-lucide="globe" style="width:14px;height:14px;"></i> ${localArt.source_domain}</span>
+            </div>
+          </div>
+
+          <div class="drawer-body">
+            <!-- Full Original Article Card -->
+            <div style="background:rgba(255,255,255,0.01); border:1px solid var(--border-color); border-radius:16px; padding:20px; margin-bottom:20px;">
+              <div style="font-family:var(--font-header); font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); font-weight:700; margin-bottom:12px; letter-spacing:0.5px;">Original Article</div>
+              <p style="font-size:0.95rem; line-height:1.75; color:var(--text-main); white-space: pre-line; letter-spacing:0.01em;">
+                ${(localArt.content_snippet || localArt.description || 'No article content available.').replace(/<[^>]*>/g, '').trim()}
+              </p>
+            </div>
+
+            <!-- Generate AI Summary Button -->
+            <div id="ai-generate-section" style="margin-bottom:24px;">
+              <button onclick="generateAiSummary('${articleId}')" style="width:100%; padding:14px; border:none; border-radius:14px; background:linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color:white; font-family:var(--font-primary); font-size:0.92rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 15px rgba(99,102,241,0.3); transition:transform 0.15s ease;">
+                <i data-lucide="sparkles" style="width:16px; height:16px;"></i> Generate AI Summary
+              </button>
+            </div>
+
+            <!-- Loading Summary skeleton (hidden initially) -->
+            <div id="summary-loading" style="display:none; text-align:center; padding:30px; background:rgba(99,102,241,0.02); border:1px dashed rgba(99,102,241,0.3); border-radius:16px; margin-bottom:24px;">
+              <div style="width:28px; height:28px; border:2px solid rgba(99,102,241,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 10px;"></div>
+              <div style="font-size:0.85rem; font-weight:600; color:var(--text-main);">Generating Summary...</div>
+            </div>
+
+            <!-- AI Summary Card Container (Filled dynamically after click or load) -->
+            <div id="ai-summary-card-container"></div>
+
+            <!-- Related Articles Section -->
+            <div id="related-articles-section" style="margin-top:20px; border-top:1px solid var(--border-color); padding-top:20px;">
+              <div style="font-family:var(--font-header); font-size:0.95rem; font-weight:700; color:var(--text-main); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="link" style="width:16px;height:16px;color:var(--accent);"></i> Related News
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;" id="related-articles-list">
+                <!-- Related items dynamically rendered -->
+              </div>
+            </div>
+
+          </div>
+        `;
+      }
+      
+      // Load sticky bottom
+      const stickyBottom = document.getElementById("drawer-sticky-bottom");
+      stickyBottom.innerHTML = `
+        <a href="${localArt.url}" target="_blank" class="source-link-btn" style="background:var(--accent-gradient); color:#fff; border:none; padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:600; text-decoration:none; cursor:pointer; font-size:0.9rem; margin-top:0;">
+          Read Original Article
+          <i data-lucide="external-link" style="width:16px;height:16px;"></i>
+        </a>
+      `;
+      stickyBottom.style.display = "block";
+      
+      // Load related articles
+      const relatedList = document.getElementById("related-articles-list");
+      if (relatedList) {
+        const related = articles.filter(a => a.id !== articleId && a.category === localArt.category).slice(0, 2);
+        if (related.length > 0) {
+          relatedList.innerHTML = related.map(rel => `
+            <div onclick="openArticle('${rel.id}')" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:0.85rem; font-weight:600; color:var(--text-main); max-width:85%;">${rel.title}</div>
+              <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--text-muted);"></i>
+            </div>
+          `).join("");
+        } else {
+          relatedList.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">No similar articles found.</span>`;
+        }
+      }
+
+      // Check if analysis is already loaded
+      try {
+        const res = await authenticatedFetch(`/api/v1/news/${articleId}`);
+        if (res.ok) {
+          const detail = await res.json();
+          if (detail.analysis) {
+            // Already has AI summary, display it immediately
+            displayAiSummaryCard(detail.analysis, detail.title, detail.url);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading analysis:", err);
+      }
+
       lucide.createIcons();
+    }
+
+    async function generateAiSummary(articleId) {
+      const generateSec = document.getElementById("ai-generate-section");
+      const loadingSec = document.getElementById("summary-loading");
+      
+      if (generateSec) generateSec.style.display = "none";
+      if (loadingSec) loadingSec.style.display = "block";
+      
+      try {
+        const res = await authenticatedFetch(`/api/v1/news/${articleId}/analyze`, { method: "POST" });
+        if (!res.ok) throw new Error("Failed to generate AI summary");
+        
+        const detail = await res.json();
+        if (loadingSec) loadingSec.style.display = "none";
+        
+        if (detail.analysis) {
+          displayAiSummaryCard(detail.analysis, detail.title, detail.url);
+        }
+      } catch (err) {
+        console.error("Error generating AI summary:", err);
+        if (loadingSec) loadingSec.style.display = "none";
+        if (generateSec) generateSec.style.display = "block";
+        alert("Could not generate summary: " + err.message);
+      }
+      lucide.createIcons();
+    }
+
+    function displayAiSummaryCard(analysis, title, url) {
+      const container = document.getElementById("ai-summary-card-container");
+      const generateSec = document.getElementById("ai-generate-section");
+      if (generateSec) generateSec.style.display = "none";
+      if (!container) return;
+      
+      const keyTakeaways = analysis.key_takeaways || [];
+      const companies = analysis.companies || [];
+      const technologies = analysis.technologies_mentioned || [];
+      
+      container.innerHTML = `
+        <div style="background:rgba(99,102,241,0.03); border:1.5px solid var(--accent); border-radius:18px; padding:20px; margin-bottom:24px; box-shadow:0 8px 30px rgba(99,102,241,0.08);">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <h3 style="font-family:var(--font-header); font-size:1.05rem; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+              <i data-lucide="sparkles" style="width:16px;height:16px;color:#a855f7;"></i> AI Generated Summary
+            </h3>
+            
+            <!-- Quick Actions -->
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button id="tts-btn" onclick="speakText('${(analysis.summary || '').replace(/'/g, "\\'")}')" style="background:rgba(255,255,255,0.03); border:none; border-radius:8px; padding:6px 10px; color:var(--text-muted); cursor:pointer; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                <i data-lucide="volume-2" style="width:14px;height:14px;"></i> Listen
+              </button>
+              <button onclick="navigator.clipboard.writeText('${(analysis.summary || '').replace(/'/g, "\\'")}')" style="background:rgba(255,255,255,0.03); border:none; border-radius:8px; padding:6px; color:var(--text-muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                <i data-lucide="copy" style="width:14px;height:14px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Executive Summary -->
+          <div style="margin-bottom:16px;">
+            <p id="ai-summary-text-box" style="font-size:0.88rem; line-height:1.65; color:var(--text-main);">${analysis.summary || 'No summary available.'}</p>
+          </div>
+
+          <!-- Translate Actions -->
+          <div style="margin-bottom:16px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; border-top:1px solid var(--border-color); padding-top:12px;">
+            <span style="font-size:0.75rem; color:var(--text-muted);"><i data-lucide="languages" style="width:12px;height:12px;display:inline;"></i> Translate:</span>
+            <button onclick="translateSummaryUI('${(analysis.summary || '').replace(/'/g, "\\'")}', 'es')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Español</button>
+            <button onclick="translateSummaryUI('${(analysis.summary || '').replace(/'/g, "\\'")}', 'fr')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Français</button>
+            <button onclick="translateSummaryUI('${(analysis.summary || '').replace(/'/g, "\\'")}', 'de')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Deutsch</button>
+          </div>
+
+          <!-- Key Takeaways -->
+          ${keyTakeaways.length > 0 ? `
+          <div style="margin-bottom:16px;">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--accent); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">Key Takeaways</div>
+            <ul style="list-style-type:none; padding-left:0;">
+              ${keyTakeaways.map(t => `<li style="font-size:0.82rem; line-height:1.5; margin-bottom:6px; color:var(--text-main); padding-left:12px; position:relative;"><span style="position:absolute; left:0; color:var(--accent);">•</span>${t}</li>`).join('')}
+            </ul>
+          </div>
+          ` : ''}
+
+          <!-- Entities -->
+          ${companies.length > 0 || technologies.length > 0 ? `
+          <div style="margin-bottom:16px;">
+            <div style="font-size:0.8rem; font-weight:700; color:var(--accent); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">Key Entities & Tech</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              ${companies.map(c => `<span style="background:rgba(16,185,129,0.08); color:#10b981; font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:6px;">🏢 ${c}</span>`).join('')}
+              ${technologies.map(t => `<span style="background:rgba(99,102,241,0.08); color:#818cf8; font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:6px;">🧠 ${t}</span>`).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          <!-- Impact Metrics -->
+          ${analysis.business_opportunities || analysis.market_impact || analysis.risks ? `
+          <div style="display:grid; grid-template-columns:1fr; gap:10px; border-top:1px solid var(--border-color); padding-top:12px;">
+            ${analysis.business_opportunities ? `<div style="font-size:0.8rem; color:var(--text-muted);"><strong style="color:#10b981;">💡 Opportunity:</strong> ${analysis.business_opportunities}</div>` : ''}
+            ${analysis.market_impact ? `<div style="font-size:0.8rem; color:var(--text-muted);"><strong style="color:var(--accent);">📈 Market Impact:</strong> ${analysis.market_impact}</div>` : ''}
+            ${analysis.risks ? `<div style="font-size:0.8rem; color:var(--text-muted);"><strong style="color:#ef4444;">⚠️ Risk Factors:</strong> ${analysis.risks}</div>` : ''}
+          </div>
+          ` : ''}
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    async function openWeeklyEventDetail(eventId) {
+      const drawerContent = document.getElementById("drawer-content");
+      document.getElementById("drawer-overlay").classList.add("active");
+      document.getElementById("detail-drawer").classList.add("active");
+      
+      drawerContent.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <div style="margin: 0 auto 10px auto; width: 24px; height: 24px; border: 2px solid var(--border-color); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          Loading Event summary...
+        </div>
+      `;
+
+      try {
+        const res = await authenticatedFetch(`/api/v1/intelligence/events/${eventId}`);
+        if (!res.ok) throw new Error("Failed to load event detail");
+        const ev = await res.json();
+        
+        const score = ev.priority_score || 50;
+        const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+        const date = ev.published_at
+          ? new Date(ev.published_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+          : 'Date unknown';
+
+        drawerContent.innerHTML = `
+          <div class="drawer-header">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+              <span style="background:rgba(99,102,241,0.1); color:#818cf8; font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:20px; border:1px solid rgba(99,102,241,0.2);">
+                ${ev.category || 'AI Event'}
+              </span>
+              <span style="background:rgba(0,0,0,0.3); color:${scoreColor}; font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:8px;">
+                ★ ${Math.round(score)} Priority
+              </span>
+            </div>
+            <h2 class="drawer-title" style="margin-bottom:10px;">${ev.headline}</h2>
+            <div class="drawer-metadata">
+              <span style="display:flex;align-items:center;gap:4px;"><i data-lucide="clock" style="width:12px;height:12px;"></i> ${date}</span>
+              <span style="display:flex;align-items:center;gap:4px;"><i data-lucide="globe" style="width:12px;height:12px;"></i> ${ev.primary_source_domain || 'AI News'}</span>
+            </div>
+          </div>
+          <div class="drawer-body">
+            <div class="summary-section">
+              <h3 class="summary-title" style="display:flex;align-items:center;gap:6px;"><i data-lucide="sparkles" style="width:14px;height:14px;color:var(--accent);"></i> Event Summary</h3>
+              <p style="font-size:0.88rem; line-height:1.6; color:var(--text-main); margin-bottom:10px;">${ev.summary || 'No summary available.'}</p>
+            </div>
+
+            ${ev.executive_summary ? `
+            <div class="summary-section">
+              <h3 class="summary-title">Executive Analysis</h3>
+              <p style="font-size:0.85rem; line-height:1.6; color:var(--text-muted);">${ev.executive_summary}</p>
+            </div>
+            ` : ''}
+
+            <!-- Source Coverage List -->
+            ${ev.articles && ev.articles.length > 0 ? `
+            <div class="summary-section">
+              <h3 class="summary-title" style="display:flex;align-items:center;gap:6px; margin-bottom:12px;">
+                <i data-lucide="newspaper" style="width:14px;height:14px;color:var(--accent);"></i> Source Coverage Excerpts
+              </h3>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                ${ev.articles.map(art => {
+                  const cleanedDesc = art.description ? art.description.replace(/<[^>]*>/g, '').trim() : '';
+                  const cleanedSnippet = art.content_snippet ? art.content_snippet.replace(/<[^>]*>/g, '').trim() : '';
+                  const detailText = cleanedSnippet || cleanedDesc || 'No details available.';
+                  return `
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:12px; border-radius:12px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="font-size:0.75rem; font-weight:700; color:var(--accent);">${art.source_domain}</span>
+                        <span style="font-size:0.7rem; color:var(--text-muted);">${art.trust_score}% trust</span>
+                      </div>
+                      <div style="font-weight:600; font-size:0.85rem; color:var(--text-main); margin-bottom:6px; line-height:1.4;">${art.title}</div>
+                      <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.6; margin-bottom:8px; white-space: pre-line;">
+                        ${detailText}
+                      </div>
+                      <a href="${art.url}" target="_blank" style="font-size:0.75rem; color:var(--accent); font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:2px;">
+                        Read full coverage on ${art.source_domain} <i data-lucide="external-link" style="width:10px; height:10px;"></i>
+                      </a>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+            ` : ''}
+
+            ${ev.key_takeaways && ev.key_takeaways.length > 0 ? `
+            <div class="summary-section">
+              <h3 class="summary-title">Key Takeaways</h3>
+              <ul style="list-style-type:none; padding-left:0;">
+                ${ev.key_takeaways.map(t => `<li style="font-size:0.85rem; line-height:1.5; margin-bottom:8px; color:var(--text-main); padding-left:12px; position:relative;"><span style="position:absolute; left:0; color:var(--accent);">•</span>${t}</li>`).join('')}
+              </ul>
+            </div>
+            ` : ''}
+
+            ${ev.companies?.length > 0 || ev.models_mentioned?.length > 0 || ev.technologies_mentioned?.length > 0 ? `
+            <div class="summary-section">
+              <h3 class="summary-title">Key Entities & Tech</h3>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                ${ev.companies.map(c => `<span style="background:rgba(16,165,129,0.1); color:#10b981; border:1px solid rgba(16,165,129,0.2); font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:6px;">🏢 ${c}</span>`).join('')}
+                ${ev.models_mentioned ? ev.models_mentioned.map(m => `<span style="background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.2); font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:6px;">🤖 ${m}</span>`).join('') : ''}
+                ${ev.technologies_mentioned ? ev.technologies_mentioned.map(t => `<span style="background:rgba(99,102,241,0.1); color:#818cf8; border:1px solid rgba(99,102,241,0.2); font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:6px;">🧠 ${t}</span>`).join('') : ''}
+              </div>
+            </div>
+            ` : ''}
+
+            ${ev.business_opportunities || ev.risks ? `
+            <div class="summary-section" style="display:grid; grid-template-columns:1fr; gap:10px;">
+              ${ev.business_opportunities ? `<div style="background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.1); padding:10px; border-radius:8px; font-size:0.8rem;"><strong style="color:#10b981; display:block; margin-bottom:4px;">💡 Opportunity</strong>${ev.business_opportunities}</div>` : ''}
+              ${ev.risks ? `<div style="background:rgba(239,68,68,0.04); border:1px solid rgba(239,68,68,0.1); padding:10px; border-radius:8px; font-size:0.8rem;"><strong style="color:#f87171; display:block; margin-bottom:4px;">⚠️ Risk/Concern</strong>${ev.risks}</div>` : ''}
+            </div>
+            ` : ''}
+          </div>
+        `;
+
+        // Render CTA in sticky bottom
+        const stickyBottom = document.getElementById("drawer-sticky-bottom");
+        if (ev.primary_source_url) {
+          stickyBottom.innerHTML = `
+            <a href="${ev.primary_source_url}" target="_blank" class="source-link-btn" style="background:var(--accent-gradient); color:#fff; border:none; padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:600; text-decoration:none; cursor:pointer; font-size:0.9rem; margin-top:0;">
+              Read Full Story on ${ev.primary_source_domain || 'Source'}
+              <i data-lucide="external-link" style="width:16px;height:16px;"></i>
+            </a>
+          `;
+          stickyBottom.style.display = "block";
+        } else {
+          stickyBottom.style.display = "none";
+        }
+
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Error fetching event detail:", err);
+      }
     }
 
     function closeDrawer() {
       document.getElementById("drawer-overlay").classList.remove("active");
       document.getElementById("detail-drawer").classList.remove("active");
+      document.getElementById("drawer-sticky-bottom").style.display = "none";
+      document.getElementById("drawer-sticky-bottom").innerHTML = "";
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+      }
     }
   </script>
 </body>

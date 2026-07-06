@@ -28,6 +28,7 @@ from app.database.base import BaseModel
 if TYPE_CHECKING:
     from app.models.news_analysis import NewsAnalysis
     from app.models.news_source import NewsSource
+    from app.models.news_event import NewsEvent
     from app.models import Bookmark
 
 
@@ -80,6 +81,15 @@ class NewsArticle(BaseModel):
         DateTime(timezone=True),
         nullable=True,
         index=True,
+    )
+
+    # ── Event (Intelligence Engine clustering) ───────────────────────────────
+    event_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("news_events.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="FK to the NewsEvent this article belongs to",
     )
 
     # ── Source ─────────────────────────────────────────────────────────────────
@@ -186,6 +196,13 @@ class NewsArticle(BaseModel):
         index=True,
         comment="Weighted final ranking score",
     )
+    priority_score: Mapped[float] = mapped_column(
+        Float,
+        default=0.0,
+        nullable=False,
+        index=True,
+        comment="Priority Engine score 0-100 (mirrors parent Event priority)",
+    )
     is_official_source: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -197,6 +214,11 @@ class NewsArticle(BaseModel):
     bookmark_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # ── Relationships ──────────────────────────────────────────────────────────
+    event: Mapped["NewsEvent | None"] = relationship(
+        "NewsEvent",
+        back_populates="articles",
+        foreign_keys=[event_id],
+    )
     source: Mapped["NewsSource | None"] = relationship(
         "NewsSource",
         back_populates="articles",

@@ -1,8 +1,8 @@
 """
-AI Pulse – FastAPI Application Entry Point
-============================================
-Creates and configures the FastAPI application with all routers,
-middleware, exception handlers, and lifecycle management.
+AI News Intelligence Engine – FastAPI Application Entry Point
+==============================================================
+Production-ready backend that continuously discovers, validates,
+processes, prioritizes, clusters, and surfaces AI news.
 """
 
 from __future__ import annotations
@@ -60,12 +60,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         else:
             logger.error("database_connection_failed")
 
-        # SCHEDULER DISABLED — run tests/test_news_fetch.py first to verify fetchers work
-        # from app.scheduler.scheduler import setup_scheduler
-        # scheduler = setup_scheduler()
-        # scheduler.start()
-        # logger.info("scheduler_started", jobs=len(scheduler.get_jobs()))
-        logger.info("scheduler_disabled", reason="manual_testing_mode")
+        # Start the Intelligence Engine scheduler
+        from app.scheduler.scheduler import setup_scheduler
+        scheduler = setup_scheduler()
+        scheduler.start()
+        logger.info(
+            "scheduler_started",
+            jobs=len(scheduler.get_jobs()),
+            fetch_interval_hours=2,
+        )
 
     except Exception as exc:
         logger.error("startup_error", error=str(exc), exc_info=True)
@@ -76,13 +79,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("app_shutting_down")
 
     try:
-        # SCHEDULER DISABLED — no scheduler to shut down
-        # from app.scheduler.scheduler import get_scheduler
-        # scheduler = get_scheduler()
-        # if scheduler.running:
-        #     scheduler.shutdown(wait=False)
-        #     logger.info("scheduler_stopped")
-        pass
+        from app.scheduler.scheduler import get_scheduler
+        scheduler = get_scheduler()
+        if scheduler.running:
+            scheduler.shutdown(wait=False)
+            logger.info("scheduler_stopped")
     except Exception as exc:
         logger.warning("scheduler_shutdown_error", error=str(exc))
 
@@ -102,18 +103,19 @@ def create_app() -> FastAPI:
     Create and configure the FastAPI application.
     """
     app = FastAPI(
-        title="AI Pulse API",
+        title="AI News Intelligence Engine API",
         description=(
-            "## AI Pulse – Personalized AI News Intelligence Platform\n\n"
-            "A production-ready backend that automatically collects, verifies, "
-            "deduplicates, and AI-analyzes the latest AI news — "
-            "delivering a personalized daily brief to each user.\n\n"
+            "## AI News Intelligence Engine\n\n"
+            "A production-ready backend that continuously discovers, validates, "
+            "processes, clusters, prioritizes, and surfaces the latest AI news from ~30 sources.\n\n"
             "### Features\n"
-            "- 🤖 **Gemini AI** analysis with summaries, categories, and importance scores\n"
-            "- 🔍 **5-layer duplicate detection** with semantic embeddings\n"
-            "- ✅ **Trust scoring** with cross-source verification\n"
-            "- 🎯 **Personalized daily briefs** based on user preferences\n"
-            "- 🔔 **Firebase push notifications** via FCM\n"
+            "- 🤖 **Gemini AI** 25-field analysis (summaries, entities, market impact, predictions)\n"
+            "- 🔍 **5-layer duplicate detection** + event clustering (same-story grouping)\n"
+            "- 📊 **Priority Engine** (0-100 score: freshness, trust, source count, impact)\n"
+            "- 📈 **Trending Engine** (companies, topics, models, keywords over 6h/24h/7d)\n"
+            "- 📰 **Daily Digest** (top news, funding, research, product launches, predictions)\n"
+            "- 🔔 **Breaking News Notifications** via Firebase FCM\n"
+            "- 🔎 **Semantic Search** using Gemini embeddings\n"
             "- ⚡ **Upstash Redis** caching layer\n"
         ),
         version=settings.app_version,
@@ -172,6 +174,10 @@ def _register_routers(app: FastAPI) -> None:
     app.include_router(categories_router, prefix=prefix)
     app.include_router(notifications_router, prefix=prefix)
     app.include_router(admin_router, prefix=prefix)
+
+    # Intelligence Engine routes (✨ NEW)
+    from app.api.v1.intelligence import router as intelligence_router
+    app.include_router(intelligence_router, prefix=prefix)
 
     # Root UI Route
     from fastapi.responses import HTMLResponse

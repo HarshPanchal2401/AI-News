@@ -503,6 +503,50 @@ async def get_article(
     return response
 
 
+@router.post(
+    "/{article_id}/analyze",
+    response_model=NewsArticleResponse,
+    summary="Trigger/generate AI summary and analysis for a specific article",
+)
+async def analyze_article(
+    article_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> NewsArticleResponse:
+    """
+    Triggers/gets Gemini analysis for the specified article.
+    """
+    stmt = (
+        select(NewsArticle)
+        .options(selectinload(NewsArticle.analysis))
+        .where(NewsArticle.id == article_id)
+    )
+    result = await db.execute(stmt)
+    article = result.scalar_one_or_none()
+    if not article:
+        raise NotFoundError("Article", article_id)
+        
+    if not article.analysis:
+        from app.services.ai.analyzer import BatchArticleProcessor
+        processor = BatchArticleProcessor(db)
+        await processor.process_article(article)
+        
+        # Refresh article to include analysis
+        stmt = (
+            select(NewsArticle)
+            .options(selectinload(NewsArticle.analysis))
+            .where(NewsArticle.id == article_id)
+        )
+        result = await db.execute(stmt)
+        article = result.scalar_one()
+
+    # Clear cache
+    redis = get_redis_client()
+    cache_key = f"news:detail:{article_id}"
+    await redis.delete(cache_key)
+
+    return _article_to_detail_schema(article)
+
+
 @router.get(
     "/daily-brief",
     response_model=list[NewsArticleListResponse],
@@ -563,6 +607,21 @@ async def get_daily_brief(
     result = await db.execute(stmt)
     articles = list(result.scalars().all())
 
+    # Fallback: if no personalized matches found, return top 5 articles from the database
+    if not articles:
+        fallback_stmt = (
+            select(NewsArticle)
+            .options(selectinload(NewsArticle.analysis))
+            .where(
+                NewsArticle.is_verified == True,
+                NewsArticle.is_duplicate == False,
+            )
+            .order_by(desc(NewsArticle.priority_score), desc(NewsArticle.created_at))
+            .limit(5)
+        )
+        fallback_result = await db.execute(fallback_stmt)
+        articles = list(fallback_result.scalars().all())
+
     return [_article_to_list_schema(a) for a in articles]
 
 
@@ -598,13 +657,34 @@ def _article_to_detail_schema(article: NewsArticle) -> NewsArticleResponse:
         a = article.analysis
         analysis_schema = NewsAnalysisResponse(
             summary=a.summary,
+            executive_summary=a.executive_summary,
+            key_takeaways=a.key_takeaways or [],
             category=a.category,
-            companies=a.companies,
-            keywords=a.keywords,
-            tags=a.tags,
+            subcategory=a.subcategory,
+            event_type=a.event_type,
+            companies=a.companies or [],
+            keywords=a.keywords or [],
+            tags=a.tags or [],
             importance_score=a.importance_score,
             why_it_matters=a.why_it_matters,
             reading_time_minutes=a.reading_time_minutes,
+            products_mentioned=a.products_mentioned or [],
+            people_mentioned=a.people_mentioned or [],
+            technologies_mentioned=a.technologies_mentioned or [],
+            programming_languages=a.programming_languages or [],
+            models_mentioned=a.models_mentioned or [],
+            funding_amount=a.funding_amount,
+            funding_currency=a.funding_currency,
+            research_paper_url=a.research_paper_url,
+            arxiv_id=a.arxiv_id,
+            countries_affected=a.countries_affected or [],
+            industries_affected=a.industries_affected or [],
+            market_impact=a.market_impact,
+            business_opportunities=a.business_opportunities,
+            risks=a.risks,
+            sentiment=a.sentiment,
+            urgency=a.urgency,
+            confidence_score=a.confidence_score,
         )
 
     return NewsArticleResponse(

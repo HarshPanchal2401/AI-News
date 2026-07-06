@@ -91,6 +91,13 @@ class Settings(BaseSettings):
     # ── Duplicate Detection ────────────────────────────────────────────────────
     semantic_similarity_threshold: float = Field(default=0.92, ge=0.0, le=1.0)
 
+    # ── Intelligence Engine ─────────────────────────────────────────────────
+    notification_priority_threshold: float = Field(default=80.0, ge=0.0, le=100.0)
+    news_fetch_interval_hours: int = Field(default=2, ge=1, le=24)
+    breaking_news_age_hours: float = Field(default=4.0, ge=1.0, le=12.0)
+    trending_window_hours: int = Field(default=24, ge=6, le=168)
+    digest_cache_ttl: int = Field(default=43200, ge=3600)  # 12 hours
+
     # ── Cache TTLs (seconds) ───────────────────────────────────────────────────
     cache_ttl_news_latest: int = 300
     cache_ttl_news_detail: int = 1800

@@ -111,13 +111,34 @@ class PreferencesUpdateRequest(BaseModel):
 
 class NewsAnalysisResponse(APIBase):
     summary: str
+    executive_summary: str | None = None
+    key_takeaways: list[str] = Field(default_factory=list)
     category: str
-    companies: list[str]
-    keywords: list[str]
-    tags: list[str]
+    subcategory: str | None = None
+    event_type: str | None = None
+    companies: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     importance_score: float
     why_it_matters: str
     reading_time_minutes: int
+    products_mentioned: list[str] = Field(default_factory=list)
+    people_mentioned: list[str] = Field(default_factory=list)
+    technologies_mentioned: list[str] = Field(default_factory=list)
+    programming_languages: list[str] = Field(default_factory=list)
+    models_mentioned: list[str] = Field(default_factory=list)
+    funding_amount: float | None = None
+    funding_currency: str | None = None
+    research_paper_url: str | None = None
+    arxiv_id: str | None = None
+    countries_affected: list[str] = Field(default_factory=list)
+    industries_affected: list[str] = Field(default_factory=list)
+    market_impact: str | None = None
+    business_opportunities: str | None = None
+    risks: str | None = None
+    sentiment: str | None = None
+    urgency: str | None = None
+    confidence_score: float | None = None
 
 
 class NewsSourceResponse(APIBase):

@@ -72,14 +72,15 @@ async def update_me(
     return current_user
 
 
-@users_router.post("/me/fcm-token", status_code=status.HTTP_204_NO_CONTENT, summary="Register FCM device token")
+@users_router.post("/me/fcm-token", status_code=status.HTTP_200_OK, summary="Register FCM device token")
 async def register_fcm_token(
     payload: FCMTokenRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> None:
+) -> dict:
     current_user.fcm_token = payload.fcm_token
     await db.commit()
+    return {"status": "ok"}
 
 
 # ── Preferences Router ────────────────────────────────────────────────────────
@@ -287,12 +288,12 @@ async def create_bookmark(
     return bookmark
 
 
-@bookmarks_router.delete("/{article_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Remove bookmark")
+@bookmarks_router.delete("/{article_id}", status_code=status.HTTP_200_OK, summary="Remove bookmark")
 async def delete_bookmark(
     article_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> None:
+) -> dict:
     result = await db.execute(
         select(Bookmark).where(
             Bookmark.user_id == current_user.id,
@@ -311,6 +312,7 @@ async def delete_bookmark(
 
     await db.delete(bookmark)
     await db.commit()
+    return {"status": "deleted"}
 
 
 # ── Notifications Router ──────────────────────────────────────────────────────
@@ -334,12 +336,12 @@ async def get_notifications(
     return list(result.scalars().all())
 
 
-@notifications_router.put("/{notification_id}/read", status_code=status.HTTP_204_NO_CONTENT, summary="Mark notification as read")
+@notifications_router.put("/{notification_id}/read", status_code=status.HTTP_200_OK, summary="Mark notification as read")
 async def mark_notification_read(
     notification_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> None:
+) -> dict:
     result = await db.execute(
         select(Notification).where(
             Notification.id == notification_id,
@@ -353,13 +355,14 @@ async def mark_notification_read(
     notification.is_read = True
     notification.read_at = utcnow()
     await db.commit()
+    return {"status": "read"}
 
 
-@notifications_router.put("/read-all", status_code=status.HTTP_204_NO_CONTENT, summary="Mark all notifications as read")
+@notifications_router.put("/read-all", status_code=status.HTTP_200_OK, summary="Mark all notifications as read")
 async def mark_all_read(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> None:
+) -> dict:
     from sqlalchemy import update
     await db.execute(
         update(Notification)
@@ -367,6 +370,7 @@ async def mark_all_read(
         .values(is_read=True, read_at=utcnow())
     )
     await db.commit()
+    return {"status": "all_read"}
 
 
 # ── Categories Router ─────────────────────────────────────────────────────────

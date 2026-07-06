@@ -256,3 +256,85 @@ class ReutersAIFetcher(RSSFetcher):
             source_name="reuters_technology",
             source_domain="reuters.com",
         )
+
+
+class WiredAIFetcher(RSSFetcher):
+    SOURCE_NAME = "wired_ai"
+
+    def __init__(self) -> None:
+        super().__init__(
+            feed_url="https://www.wired.com/feed/tag/artificial-intelligence/latest/rss",
+            source_name="wired_ai",
+            source_domain="wired.com",
+        )
+
+
+class TheVergeFetcher(RSSFetcher):
+    SOURCE_NAME = "theverge_ai"
+
+    def __init__(self) -> None:
+        super().__init__(
+            feed_url="https://www.theverge.com/ai-artificial-intelligence/rss/index.xml",
+            source_name="theverge_ai",
+            source_domain="theverge.com",
+        )
+
+
+class ArsTechnicaFetcher(RSSFetcher):
+    SOURCE_NAME = "arstechnica_ai"
+
+    def __init__(self) -> None:
+        super().__init__(
+            feed_url="https://feeds.arstechnica.com/arstechnica/index",
+            source_name="arstechnica_ai",
+            source_domain="arstechnica.com",
+        )
+
+
+class BloombergTechFetcher(RSSFetcher):
+    """Bloomberg Technology RSS — may be paywalled but headlines are available."""
+    SOURCE_NAME = "bloomberg_tech"
+
+    def __init__(self) -> None:
+        super().__init__(
+            feed_url="https://feeds.bloomberg.com/technology/news.rss",
+            source_name="bloomberg_tech",
+            source_domain="bloomberg.com",
+        )
+
+
+class StabilityAIFetcher(RSSFetcher):
+    SOURCE_NAME = "stability_ai_news"
+
+    def __init__(self) -> None:
+        super().__init__(
+            feed_url="https://stability.ai/news/rss",
+            source_name="stability_ai_news",
+            source_domain="stability.ai",
+            is_official=True,
+            official_company="Stability AI",
+        )
+
+
+class CohereFetcher(RSSFetcher):
+    SOURCE_NAME = "cohere_blog"
+
+    def __init__(self) -> None:
+        super().__init__(
+            feed_url="https://cohere.com/blog/rss",
+            source_name="cohere_blog",
+            source_domain="cohere.com",
+            is_official=True,
+            official_company="Cohere",
+        )
+
+
+class PapersWithCodeFetcher(RSSFetcher):
+    SOURCE_NAME = "papers_with_code"
+
+    def __init__(self) -> None:
+        super().__init__(
+            feed_url="https://paperswithcode.com/blog/rss",
+            source_name="papers_with_code",
+            source_domain="paperswithcode.com",
+        )

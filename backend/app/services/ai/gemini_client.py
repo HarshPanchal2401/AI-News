@@ -132,6 +132,57 @@ class GeminiClient:
             f"Gemini failed after {max_retries} attempts: {last_error}"
         )
 
+    async def generate_text(
+        self,
+        prompt: str,
+        max_retries: int = 2,
+        timeout_seconds: float = 30.0,
+    ) -> str:
+        """
+        Generate free-form text from Gemini (non-JSON mode).
+
+        Used for market summaries, predictions, and other narrative content.
+
+        Args:
+            prompt: The prompt to send.
+            max_retries: Max retry attempts.
+            timeout_seconds: Timeout per request.
+
+        Returns:
+            Generated text string.
+        """
+        import google.generativeai as genai
+        from google.generativeai.types import GenerationConfig
+
+        text_model = genai.GenerativeModel(
+            model_name=settings.gemini_model,
+            generation_config=GenerationConfig(
+                temperature=0.3,
+                top_p=0.9,
+            ),
+        )
+
+        last_error: Exception | None = None
+
+        for attempt in range(max_retries):
+            try:
+                await self._wait_for_rate_limit()
+                loop = asyncio.get_event_loop()
+                response = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None,
+                        lambda: text_model.generate_content(prompt),
+                    ),
+                    timeout=timeout_seconds,
+                )
+                return response.text.strip()
+            except Exception as exc:
+                logger.warning("gemini_text_error", attempt=attempt + 1, error=str(exc))
+                last_error = exc
+                await asyncio.sleep(2 ** attempt)
+
+        return ""  # Graceful fallback
+
     async def generate_embedding(self, text: str) -> list[float] | None:
         """
         Generate a text embedding using Gemini embedding model.
