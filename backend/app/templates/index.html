@@ -1508,7 +1508,12 @@
         card.style.cursor = 'pointer';
         // Slightly subdued opacity for older batch
         if (isOlderBatch) card.style.opacity = '0.88';
-        card.onclick = () => openLiveArticleDrawer(article);
+        card.onclick = () => {
+          if (article.id && !articles.find(a => a.id === article.id)) {
+            articles.push(article);
+          }
+          openArticle(article.id);
+        };
 
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
@@ -1538,107 +1543,7 @@
       });
     }
 
-    // --- Live Article Drawer ---
-    function openLiveArticleDrawer(article) {
-      const SOURCE_LABELS = {
-        'openai_blog': 'OpenAI Blog', 'google_ai_blog': 'Google AI Blog', 'deepmind_blog': 'DeepMind Blog',
-        'anthropic_news': 'Anthropic News', 'microsoft_ai_blog': 'Microsoft AI Blog', 'meta_ai_blog': 'Meta AI Blog',
-        'nvidia_ai_blog': 'NVIDIA Blog', 'huggingface_blog': 'Hugging Face Blog', 'techcrunch_ai': 'TechCrunch',
-        'venturebeat_ai': 'VentureBeat', 'mit_tech_review': 'MIT Technology Review', 'google_news_ai': 'Google News',
-        'arxiv': 'ArXiv Research', 'github_trending_ai': 'GitHub Trending', 'producthunt_ai': 'Product Hunt',
-        'mistral_news': 'Mistral AI Blog', 'xai_news': 'xAI Blog', 'perplexity_blog': 'Perplexity Blog',
-        'reuters_technology': 'Reuters Technology'
-      };
-
-      const sourceLabel = SOURCE_LABELS[article.source] || article.source;
-      const isOfficial = article.is_official;
-      const score = article.importance_score || 0;
-      const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
-
-      const date = article.published_at
-        ? new Date(article.published_at).toLocaleString('en-US', {
-            weekday: 'long', month: 'long', day: 'numeric',
-            hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-          })
-        : 'Date unknown';
-
-      // Full description (cleaned of HTML tags)
-      const fullDesc = article.description
-        ? article.description.replace(/<[^>]*>/g, '').trim()
-        : 'No description available for this article.';
-
-      const domain = article.source_domain || new URL(article.url).hostname.replace('www.', '');
-
-      document.getElementById('drawer-content').innerHTML = `
-        <div class="drawer-header">
-          <!-- Source + score row -->
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span style="
-                background: ${isOfficial ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.06)'};
-                color: ${isOfficial ? '#818cf8' : 'var(--text-muted)'};
-                border: 1px solid ${isOfficial ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.1)'};
-                font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-              ">${isOfficial ? '⚡ ' : ''}${sourceLabel}</span>
-              ${isOfficial ? '<span style="font-size:0.7rem;color:#10b981;font-weight:600;">✓ Official Source</span>' : ''}
-            </div>
-            <span style="
-              background: rgba(0,0,0,0.3); color:${scoreColor};
-              font-size:0.72rem; font-weight:700; padding:3px 9px; border-radius:8px;
-            ">★ ${Math.round(score)} Importance</span>
-          </div>
-
-          <!-- Title -->
-          <div class="drawer-title" style="margin-bottom:10px;">${article.title}</div>
-
-          <!-- Date & domain -->
-          <div class="drawer-metadata">
-            <span style="display:flex;align-items:center;gap:4px;">
-              <i data-lucide="clock" style="width:12px;height:12px;"></i> ${date}
-            </span>
-            <span style="display:flex;align-items:center;gap:4px;">
-              <i data-lucide="globe" style="width:12px;height:12px;"></i> ${domain}
-            </span>
-          </div>
-        </div>
-
-        <div class="drawer-body">
-          <!-- Full description / summary -->
-          <div class="summary-section">
-            <div class="summary-title">What's This About</div>
-            <div style="font-size:0.88rem; line-height:1.7; color:var(--text-main);">
-              ${fullDesc}
-            </div>
-          </div>
-
-          ${article.official_company ? `
-          <div style="
-            display:flex; align-items:center; gap:10px;
-            padding:10px 14px;
-            background:rgba(99,102,241,0.08);
-            border:1px solid rgba(99,102,241,0.2);
-            border-radius:12px;
-          ">
-            <i data-lucide="building-2" style="width:16px;height:16px;color:#818cf8;flex-shrink:0;"></i>
-            <div>
-              <div style="font-size:0.72rem;color:#818cf8;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Official Company News</div>
-              <div style="font-size:0.85rem;font-weight:600;margin-top:1px;">${article.official_company}</div>
-            </div>
-          </div>
-          ` : ''}
-
-          <!-- Read full article CTA -->
-          <div style="padding-top:4px;">
-            <div style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-bottom:8px;">
-              This is a summary. Read the full story on the original source:
-            </div>
-            <a href="${article.url}" target="_blank" class="source-link-btn">
-              Read Full Article on ${domain}
-              <i data-lucide="external-link" style="width:16px;height:16px;"></i>
-            </a>
-          </div>
-        </div>
-      `;
+    // --- Live Article Drawer (Obsolete: Handled by openArticle) ---
 
       async function renderBookmarks() {
       const container = document.getElementById("bookmarks-feed");
@@ -1838,104 +1743,188 @@
 
     async function loadDailyBrief() {
       const container = document.getElementById("brief-feed");
-      container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading briefs...</div>`;
-      
-      try {
-        // Fetch Weekly Brief first
-        let weeklyHTML = "";
-        try {
-          const weeklyRes = await authenticatedFetch('/api/v1/intelligence/weekly-brief');
-          if (weeklyRes.ok) {
-            const weeklyBrief = await weeklyRes.json();
-            weeklyHTML = `
-              <div class="article-card" style="background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(168,85,247,0.12) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; margin-bottom: 20px; padding: 16px; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: -10px; right: -10px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%); pointer-events: none;"></div>
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                  <span style="background:var(--accent-gradient); color:#fff; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; padding:3px 10px; border-radius:30px; display:inline-flex; align-items:center; gap:4px;">
-                    <i data-lucide="sparkles" style="width:10px; height:10px;"></i> Brief of the Week
-                  </span>
-                  <span style="font-size:0.7rem; color:var(--text-muted);">Rolling 7-day executive summary</span>
-                </div>
-                <div style="font-size: 0.88rem; line-height: 1.6; color: var(--text-main); font-weight: 500; margin-bottom: 12px;">
-                  ${weeklyBrief.summary}
-                </div>
-                ${weeklyBrief.events && weeklyBrief.events.length > 0 ? `
-                  <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 8px;">
-                    <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.5px;">Top Weekly Events</div>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                      ${weeklyBrief.events.map(ev => `
-                        <div class="weekly-event-item" style="font-size:0.82rem; color:var(--text-main); display:flex; align-items:center; gap:6px; cursor:pointer; padding:4px 0;" onclick="event.stopPropagation(); openWeeklyEventDetail('${ev.id}')">
-                          <span style="color:var(--accent); font-weight:bold;">★</span>
-                          <span style="text-decoration: underline; text-underline-offset: 2px;">${ev.headline}</span>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>
-                ` : ''}
-              </div>
-            `;
-          }
-        } catch (weeklyErr) {
-          console.error("Error loading weekly brief:", weeklyErr);
-        }
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+          <div class="pulse-loader" style="width: 50px; height: 50px; background: var(--accent-gradient); border-radius: 50%; margin: 0 auto 20px auto; animation: pulse 1.5s infinite ease-in-out;"></div>
+          <div style="font-weight: 600; font-size: 1rem; color: var(--text-main);">Analyzing today's market signals...</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">Generating daily executive summary and trend vectors...</div>
+        </div>
+      `;
 
-        const res = await authenticatedFetch('/api/v1/news/daily-brief');
-        if (!res.ok) throw new Error("Failed to fetch daily brief");
-        const briefArticles = await res.json();
-        
-        if (briefArticles.length === 0 && !weeklyHTML) {
-          container.innerHTML = `
-            <div class="article-card" style="text-align: center; padding: 30px;">
-              <i data-lucide="coffee" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--accent);"></i>
-              <div style="font-weight: 600; font-size: 1rem;">No brief generated today</div>
-              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">We couldn't find enough news matching your preferences today.</div>
+      // Inject pulse animation CSS dynamically if not present
+      if (!document.getElementById('pulse-loader-style')) {
+        const style = document.createElement('style');
+        style.id = 'pulse-loader-style';
+        style.innerHTML = `
+          @keyframes pulse {
+            0% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(99,102,241,0); }
+            100% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      try {
+        const res = await authenticatedFetch('/api/v1/intelligence/digest');
+        if (!res.ok) throw new Error("Failed to fetch daily digest");
+        const digest = await res.json();
+
+        let html = "";
+
+        // 1. Market Summary (trending now in AI markets)
+        if (digest.market_summary) {
+          html += `
+            <div class="article-card" style="background: linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(168,85,247,0.12) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; margin-bottom: 20px; padding: 18px; position: relative; overflow: hidden;">
+              <div style="position: absolute; top: -10px; right: -10px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%); pointer-events: none;"></div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <span style="background:var(--accent-gradient); color:#fff; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; padding:3px 10px; border-radius:30px; display:inline-flex; align-items:center; gap:4px;">
+                  <i data-lucide="sparkles" style="width:10px; height:10px;"></i> Market Summary
+                </span>
+                <span style="font-size:0.7rem; color:var(--text-muted);">AI industry landscape today</span>
+              </div>
+              <div style="font-size: 0.9rem; line-height: 1.65; color: var(--text-main); font-weight: 500;">
+                ${digest.market_summary}
+              </div>
             </div>
           `;
-          lucide.createIcons();
-          return;
         }
-        
-        container.innerHTML = weeklyHTML;
-        
-        if (briefArticles.length > 0) {
-          const sectionHeader = document.createElement("div");
-          sectionHeader.style.cssText = "font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin: 15px 0 10px 0; letter-spacing:0.5px;";
-          sectionHeader.innerText = "Your Personalized Daily Brief";
-          container.appendChild(sectionHeader);
 
-          briefArticles.forEach(art => {
-            const score = art.final_score || 0;
-            const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
-            const card = document.createElement("div");
-            card.className = "article-card";
-            card.style.cursor = 'pointer';
-            card.innerHTML = `
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);"><i data-lucide="globe" style="width:12px; height:12px; display:inline;"></i> ${art.source_domain || 'AI News'}</span>
-                </div>
-                <span style="background:rgba(0,0,0,0.2); color:${scoreColor}; font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:8px;">★ ${Math.round(score)}</span>
+        // 2. Predictions Block
+        if (digest.predictions && digest.predictions.length > 0) {
+          html += `
+            <div class="article-card" style="border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 20px; padding: 18px; background: var(--bg-card);">
+              <div style="font-family:var(--font-header); font-size:0.85rem; font-weight:700; text-transform:uppercase; color:var(--accent); margin-bottom:12px; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="compass" style="width:14px; height:14px;"></i> Venture Predictions (1-4 Weeks)
               </div>
-              <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${art.title}</div>
-              <div style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Tap to read →</div>
-            `;
-            card.onclick = () => {
-              if (!articles.find(a => a.id === art.id)) articles.push(art);
-              openArticle(art.id);
-            };
-            container.appendChild(card);
-          });
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                ${digest.predictions.map(pred => `
+                  <div style="font-size:0.85rem; line-height:1.5; color:var(--text-main); display:flex; gap:8px;">
+                    <span style="color:var(--accent); font-weight:bold;">→</span>
+                    <span>${pred}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
         }
+
+        // 3. Trending Technologies & Companies
+        let trendingTechHTML = "";
+        if (digest.trending_technologies && digest.trending_technologies.length > 0) {
+          trendingTechHTML = `
+            <div style="margin-bottom:16px;">
+              <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.5px;">Trending Tech & Keywords</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                ${digest.trending_technologies.map(t => `<span style="background:rgba(99,102,241,0.08); color:#818cf8; border:1px solid rgba(99,102,241,0.2); font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:6px;">🧠 ${t.name}</span>`).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        let topCompaniesHTML = "";
+        if (digest.top_companies && digest.top_companies.length > 0) {
+          topCompaniesHTML = `
+            <div style="margin-bottom:8px;">
+              <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.5px;">Top Mentioned Companies</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                ${digest.top_companies.map(c => `<span style="background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.2); font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:6px;">🏢 ${c.company} (${c.mention_count})</span>`).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        if (trendingTechHTML || topCompaniesHTML) {
+          html += `
+            <div class="article-card" style="border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 20px; padding: 18px; background: var(--bg-card);">
+              <div style="font-family:var(--font-header); font-size:0.85rem; font-weight:700; text-transform:uppercase; color:var(--accent); margin-bottom:12px; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+                <i data-lucide="trending-up" style="width:14px; height:14px;"></i> Trending Market Signals
+              </div>
+              ${trendingTechHTML}
+              ${topCompaniesHTML}
+            </div>
+          `;
+        }
+
+        // 4. Commercial Opportunities & Risks
+        let oppsHTML = "";
+        if (digest.business_opportunities && digest.business_opportunities.length > 0) {
+          oppsHTML = `
+            <div style="background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.15); padding:14px; border-radius:12px; font-size:0.82rem; margin-bottom:12px; width:100%;">
+              <strong style="color:#10b981; display:flex; align-items:center; gap:4px; margin-bottom:6px; font-family:var(--font-header); font-size:0.85rem;"><i data-lucide="lightbulb" style="width:14px; height:14px;"></i> Opportunities</strong>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${digest.business_opportunities.map(o => `<div style="line-height:1.4;">• ${o}</div>`).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        let risksHTML = "";
+        if (digest.risks && digest.risks.length > 0) {
+          risksHTML = `
+            <div style="background:rgba(239,68,68,0.04); border:1px solid rgba(239,68,68,0.15); padding:14px; border-radius:12px; font-size:0.82rem; margin-bottom:12px; width:100%;">
+              <strong style="color:#f87171; display:flex; align-items:center; gap:4px; margin-bottom:6px; font-family:var(--font-header); font-size:0.85rem;"><i data-lucide="shield-alert" style="width:14px; height:14px;"></i> Risk Factors</strong>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                ${digest.risks.map(r => `<div style="line-height:1.4;">• ${r}</div>`).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        if (oppsHTML || risksHTML) {
+          html += `
+            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:20px;">
+              ${oppsHTML}
+              ${risksHTML}
+            </div>
+          `;
+        }
+
+        // 5. Top Stories of the Day (List of NewsEvent items)
+        if (digest.top_10_news && digest.top_10_news.length > 0) {
+          html += `
+            <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin: 24px 0 12px 0; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+              <i data-lucide="list" style="width:14px; height:14px; color:var(--accent);"></i> Top News Developments Today
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              ${digest.top_10_news.map(ev => {
+                const score = ev.priority_score || 0;
+                const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+                return `
+                  <div class="article-card" style="cursor:pointer;" onclick="openWeeklyEventDetail('${ev.id}')">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="background:rgba(255,255,255,0.06); font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:20px; color:var(--text-muted); border:1px solid rgba(255,255,255,0.1);">${ev.category || 'AI News'}</span>
+                      </div>
+                      <span style="background:rgba(0,0,0,0.2); color:${scoreColor}; font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:8px;">★ ${Math.round(score)}</span>
+                    </div>
+                    <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${ev.headline}</div>
+                    <div style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Tap to view coverage details →</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
+
+        container.innerHTML = html;
         lucide.createIcons();
+
       } catch (err) {
-        console.error("Error loading daily brief:", err);
+        console.error("Error loading daily brief digest:", err);
+        container.innerHTML = `
+          <div class="article-card" style="text-align: center; padding: 35px; border-color:#ef4444;">
+            <i data-lucide="alert-circle" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color:#ef4444;"></i>
+            <div style="font-weight: 600; font-size: 1rem; color:#ef4444;">Failed to load Briefing</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">${err.message || 'An unexpected error occurred. Please verify database connectivity.'}</div>
+            <button onclick="loadDailyBrief()" style="margin-top: 15px; padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Try Again</button>
+          </div>
+        `;
+        lucide.createIcons();
       }
     }
 
-      document.getElementById('drawer-overlay').classList.add('active');
-      document.getElementById('detail-drawer').classList.add('active');
-      lucide.createIcons();
-    }
+
 
     // --- Renderers ---
     function renderFeed() {
@@ -2337,23 +2326,8 @@
           </div>
 
           <div class="drawer-body">
-            <!-- Full Original Article Card -->
-            <div style="background:rgba(255,255,255,0.01); border:1px solid var(--border-color); border-radius:16px; padding:20px; margin-bottom:20px;">
-              <div style="font-family:var(--font-header); font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); font-weight:700; margin-bottom:12px; letter-spacing:0.5px;">Original Article</div>
-              <p style="font-size:0.95rem; line-height:1.75; color:var(--text-main); white-space: pre-line; letter-spacing:0.01em;">
-                ${(localArt.content_snippet || localArt.description || 'No article content available.').replace(/<[^>]*>/g, '').trim()}
-              </p>
-            </div>
-
-            <!-- Generate AI Summary Button -->
-            <div id="ai-generate-section" style="margin-bottom:24px;">
-              <button onclick="generateAiSummary('${articleId}')" style="width:100%; padding:14px; border:none; border-radius:14px; background:linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color:white; font-family:var(--font-primary); font-size:0.92rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 15px rgba(99,102,241,0.3); transition:transform 0.15s ease;">
-                <i data-lucide="sparkles" style="width:16px; height:16px;"></i> Generate AI Summary
-              </button>
-            </div>
-
-            <!-- Loading Summary skeleton (hidden initially) -->
-            <div id="summary-loading" style="display:none; text-align:center; padding:30px; background:rgba(99,102,241,0.02); border:1px dashed rgba(99,102,241,0.3); border-radius:16px; margin-bottom:24px;">
+            <!-- Loading Summary skeleton (visible initially) -->
+            <div id="summary-loading" style="display:block; text-align:center; padding:30px; background:rgba(99,102,241,0.02); border:1px dashed rgba(99,102,241,0.3); border-radius:16px; margin-bottom:24px;">
               <div style="width:28px; height:28px; border:2px solid rgba(99,102,241,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 10px;"></div>
               <div style="font-size:0.85rem; font-weight:600; color:var(--text-main);">Generating Summary...</div>
             </div>
@@ -2406,9 +2380,12 @@
         const res = await authenticatedFetch(`/api/v1/news/${articleId}`);
         if (res.ok) {
           const detail = await res.json();
-          if (detail.analysis) {
+          if (detail.analysis && detail.analysis.model_used !== "live-fetcher") {
             // Already has AI summary, display it immediately
             displayAiSummaryCard(detail.analysis, detail.title, detail.url);
+          } else {
+            // Not generated yet — trigger automatic generation!
+            generateAiSummary(articleId);
           }
         }
       } catch (err) {
@@ -2448,6 +2425,8 @@
       const container = document.getElementById("ai-summary-card-container");
       const generateSec = document.getElementById("ai-generate-section");
       if (generateSec) generateSec.style.display = "none";
+      const loadingSec = document.getElementById("summary-loading");
+      if (loadingSec) loadingSec.style.display = "none";
       if (!container) return;
       
       const keyTakeaways = analysis.key_takeaways || [];

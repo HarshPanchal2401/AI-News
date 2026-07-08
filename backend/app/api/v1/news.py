@@ -788,6 +788,7 @@ def _article_to_detail_schema(article: NewsArticle) -> NewsArticleResponse:
             sentiment=a.sentiment,
             urgency=a.urgency,
             confidence_score=a.confidence_score,
+            model_used=a.model_used,
         )
 
     return NewsArticleResponse(

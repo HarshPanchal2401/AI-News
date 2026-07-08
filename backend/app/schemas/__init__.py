@@ -142,6 +142,8 @@ class NewsAnalysisResponse(APIBase):
     sentiment: str | None = None
     urgency: str | None = None
     confidence_score: float | None = None
+    model_used: str | None = None
+
 
 
 class NewsSourceResponse(APIBase):
