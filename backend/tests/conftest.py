@@ -30,6 +30,19 @@ from app.services.news_fetchers.base import RawArticle
 import os
 os.environ.setdefault("APP_ENV", "testing")
 
+# Mock PostgreSQL ARRAY and JSONB types compilation for SQLite in tests
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+
+@compiles(ARRAY, "sqlite")
+def compile_array_sqlite(element, compiler, **kw):
+    return "TEXT"
+
+@compiles(JSONB, "sqlite")
+def compile_jsonb_sqlite(element, compiler, **kw):
+    return "TEXT"
+
+
 
 
 

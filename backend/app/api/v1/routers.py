@@ -67,6 +67,12 @@ async def update_me(
     if payload.avatar_url is not None:
         current_user.avatar_url = payload.avatar_url
     current_user.last_seen_at = utcnow()
+    try:
+        from app.services.personalization.engine import PersonalizationEngine
+        engine = PersonalizationEngine(db)
+        await engine.regenerate_after_profile_change(current_user.id)
+    except Exception:
+        pass
     await db.commit()
     await db.refresh(current_user)
     return current_user
@@ -123,10 +129,14 @@ async def update_preferences(
     for field, value in update_data.items():
         setattr(prefs, field, value)
 
-    # Invalidate brief cache
-    from app.services.cache.redis_client import get_redis_client
-    redis = get_redis_client()
-    await redis.delete(f"brief:today:{current_user.id}")
+    try:
+        from app.services.personalization.engine import PersonalizationEngine
+        engine = PersonalizationEngine(db)
+        await engine.regenerate_after_profile_change(current_user.id)
+    except Exception:
+        from app.services.cache.redis_client import get_redis_client
+        redis = get_redis_client()
+        await redis.delete(f"brief:today:{current_user.id}")
 
     await db.commit()
     await db.refresh(prefs)

@@ -86,7 +86,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     SKIP_PATHS = {"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        if request.url.path in self.SKIP_PATHS:
+        if settings.is_development or settings.is_testing or request.url.path in self.SKIP_PATHS:
             return await call_next(request)
 
         from app.services.cache.redis_client import get_redis_client

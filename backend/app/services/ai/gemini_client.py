@@ -12,8 +12,8 @@ import json
 import time
 from typing import Any
 
-import google.generativeai as genai
-from google.generativeai.types import GenerationConfig
+from google import genai
+from google.genai import types
 
 from app.core.config import settings
 from app.core.exceptions import AIProcessingError
@@ -32,15 +32,24 @@ class GeminiClient:
     """
 
     def __init__(self) -> None:
-        genai.configure(api_key=settings.gemini_api_key)
-        self._model = genai.GenerativeModel(
-            model_name=settings.gemini_model,
-            generation_config=GenerationConfig(
-                temperature=0.1,          # Low temp for consistent structured output
-                top_p=0.8,
-                response_mime_type="application/json",
-            ),
+        self._client = genai.Client(api_key=settings.gemini_api_key)
+        fallback_models = [
+            settings.gemini_model,
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+        ]
+        self._models = list(dict.fromkeys(model for model in fallback_models if model))
+        self._json_config = types.GenerateContentConfig(
+            temperature=0.1,
+            top_p=0.8,
+            response_mime_type="application/json",
         )
+        self._text_config = types.GenerateContentConfig(
+            temperature=0.3,
+            top_p=0.9,
+        )
+        self.last_successful_model = settings.gemini_model
         self._rpm_limit = settings.gemini_max_rpm
         self._request_times: list[float] = []
         self._lock = asyncio.Lock()
@@ -82,54 +91,63 @@ class GeminiClient:
         """
         last_error: Exception | None = None
 
-        for attempt in range(max_retries):
-            try:
-                await self._wait_for_rate_limit()
+        for model_name in self._models:
+            for attempt in range(max_retries):
+                try:
+                    await self._wait_for_rate_limit()
 
-                # Run in thread pool (Gemini SDK is sync)
-                loop = asyncio.get_event_loop()
-                response = await asyncio.wait_for(
-                    loop.run_in_executor(
-                        None,
-                        lambda: self._model.generate_content(prompt),
-                    ),
-                    timeout=timeout_seconds,
-                )
+                    loop = asyncio.get_event_loop()
+                    response = await asyncio.wait_for(
+                        loop.run_in_executor(
+                            None,
+                            lambda: self._client.models.generate_content(
+                                model=model_name,
+                                contents=prompt,
+                                config=self._json_config,
+                            ),
+                        ),
+                        timeout=timeout_seconds,
+                    )
 
-                text = response.text.strip()
-                # Strip markdown code fences if present
-                if text.startswith("```"):
-                    text = text.split("```")[1]
-                    if text.startswith("json"):
-                        text = text[4:]
+                    text = (response.text or "").strip()
+                    if text.startswith("```"):
+                        text = text.split("```")[1]
+                        if text.startswith("json"):
+                            text = text[4:]
 
-                return json.loads(text)
+                    self.last_successful_model = model_name
+                    return json.loads(text)
 
-            except json.JSONDecodeError as exc:
-                logger.warning(
-                    "gemini_json_parse_error",
-                    attempt=attempt + 1,
-                    error=str(exc),
-                )
-                last_error = exc
-                await asyncio.sleep(2 ** attempt)
+                except json.JSONDecodeError as exc:
+                    logger.warning(
+                        "gemini_json_parse_error",
+                        attempt=attempt + 1,
+                        model=model_name,
+                        error=str(exc),
+                    )
+                    last_error = exc
+                    await asyncio.sleep(2 ** attempt)
 
-            except asyncio.TimeoutError:
-                logger.warning("gemini_timeout", attempt=attempt + 1)
-                last_error = asyncio.TimeoutError("Gemini request timed out")
-                await asyncio.sleep(2 ** attempt)
+                except asyncio.TimeoutError:
+                    logger.warning("gemini_timeout", attempt=attempt + 1, model=model_name)
+                    last_error = asyncio.TimeoutError("Gemini request timed out")
+                    break
 
-            except Exception as exc:
-                logger.error(
-                    "gemini_api_error",
-                    attempt=attempt + 1,
-                    error=str(exc),
-                )
-                last_error = exc
-                await asyncio.sleep(2 ** attempt)
+                except Exception as exc:
+                    logger.error(
+                        "gemini_api_error",
+                        attempt=attempt + 1,
+                        model=model_name,
+                        error=str(exc),
+                    )
+                    last_error = exc
+                    error_text = str(exc).lower()
+                    if any(code in error_text for code in ["404", "not found", "invalid model"]):
+                        break
+                    await asyncio.sleep(2 ** attempt)
 
         raise AIProcessingError(
-            f"Gemini failed after {max_retries} attempts: {last_error}"
+            f"Gemini failed across models {self._models}: {last_error}"
         )
 
     async def generate_text(
@@ -151,36 +169,40 @@ class GeminiClient:
         Returns:
             Generated text string.
         """
-        import google.generativeai as genai
-        from google.generativeai.types import GenerationConfig
-
-        text_model = genai.GenerativeModel(
-            model_name=settings.gemini_model,
-            generation_config=GenerationConfig(
-                temperature=0.3,
-                top_p=0.9,
-            ),
-        )
-
         last_error: Exception | None = None
 
-        for attempt in range(max_retries):
-            try:
-                await self._wait_for_rate_limit()
-                loop = asyncio.get_event_loop()
-                response = await asyncio.wait_for(
-                    loop.run_in_executor(
-                        None,
-                        lambda: text_model.generate_content(prompt),
-                    ),
-                    timeout=timeout_seconds,
-                )
-                return response.text.strip()
-            except Exception as exc:
-                logger.warning("gemini_text_error", attempt=attempt + 1, error=str(exc))
-                last_error = exc
-                await asyncio.sleep(2 ** attempt)
+        for model_name in self._models:
+            for attempt in range(max_retries):
+                try:
+                    await self._wait_for_rate_limit()
+                    loop = asyncio.get_event_loop()
+                    response = await asyncio.wait_for(
+                        loop.run_in_executor(
+                            None,
+                            lambda: self._client.models.generate_content(
+                                model=model_name,
+                                contents=prompt,
+                                config=self._text_config,
+                            ),
+                        ),
+                        timeout=timeout_seconds,
+                    )
+                    self.last_successful_model = model_name
+                    return (response.text or "").strip()
+                except Exception as exc:
+                    logger.warning(
+                        "gemini_text_error",
+                        attempt=attempt + 1,
+                        model=model_name,
+                        error=str(exc),
+                    )
+                    last_error = exc
+                    error_text = str(exc).lower()
+                    if any(code in error_text for code in ["404", "not found", "invalid model"]):
+                        break
+                    await asyncio.sleep(2 ** attempt)
 
+        logger.error("gemini_text_failed", error=str(last_error))
         return ""  # Graceful fallback
 
     async def generate_embedding(self, text: str) -> list[float] | None:
@@ -199,13 +221,20 @@ class GeminiClient:
             loop = asyncio.get_event_loop()
             result = await loop.run_in_executor(
                 None,
-                lambda: genai.embed_content(
+                lambda: self._client.models.embed_content(
                     model=settings.gemini_embedding_model,
-                    content=text,
-                    task_type="SEMANTIC_SIMILARITY",
+                    contents=text,
+                    config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY"),
                 ),
             )
-            return result["embedding"]
+            if getattr(result, "embeddings", None):
+                embedding = result.embeddings[0]
+                return list(getattr(embedding, "values", []) or [])
+            if isinstance(result, dict):
+                embeddings = result.get("embeddings") or []
+                if embeddings:
+                    return embeddings[0].get("values") or embeddings[0].get("embedding")
+            return None
 
         except Exception as exc:
             logger.warning("gemini_embedding_error", error=str(exc))

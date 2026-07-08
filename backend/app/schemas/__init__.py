@@ -35,6 +35,9 @@ class UserRegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=128)
     display_name: str | None = Field(None, max_length=150)
+    job_title: str | None = Field(None, max_length=120)
+    tech_stack: list[str] = Field(default_factory=list, max_length=20)
+    onboarding_topics: list[str] = Field(default_factory=list, max_length=20)
 
 
 class UserLoginRequest(BaseModel):

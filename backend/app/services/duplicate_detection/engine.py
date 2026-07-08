@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.news_article import NewsArticle
+from app.services.ai.gemini_client import get_gemini_client
 from app.services.news_fetchers.base import RawArticle
 from app.utils.text_utils import (
     content_fingerprint,
@@ -48,14 +49,7 @@ async def get_gemini_embedding(text: str) -> list[float] | None:
     Returns None on failure.
     """
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=settings.gemini_api_key)
-        result = genai.embed_content(
-            model=settings.gemini_embedding_model,
-            content=text,
-            task_type="SEMANTIC_SIMILARITY",
-        )
-        return result["embedding"]
+        return await get_gemini_client().generate_embedding(text)
     except Exception as exc:
         logger.warning("embedding_generation_failed", error=str(exc))
         return None

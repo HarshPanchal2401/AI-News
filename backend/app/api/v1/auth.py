@@ -65,8 +65,18 @@ async def register(
     db.add(user)
     await db.flush()
 
-    # Create default preferences
-    prefs = UserPreferences(user_id=user.id)
+    # Create cold-start preferences from stated signup interests. A future LLM
+    # enrichment job can expand these further; the feed engine already expands
+    # common AI stack terms semantically before telemetry exists.
+    seeded_topics = []
+    if payload.job_title:
+        seeded_topics.append(payload.job_title)
+    seeded_topics.extend(payload.tech_stack or [])
+    seeded_topics.extend(payload.onboarding_topics or [])
+    prefs = UserPreferences(
+        user_id=user.id,
+        favorite_topics=list(dict.fromkeys(t for t in seeded_topics if t)),
+    )
     db.add(prefs)
     await db.commit()
     await db.refresh(user)

@@ -87,12 +87,23 @@ class Settings(BaseSettings):
     min_trust_score: float = 40.0
     min_final_score: float = 30.0
     min_brief_articles: int = 10
+    brief_min_quality_score: float = Field(default=42.0, ge=0.0, le=100.0)
+    brief_soft_min_articles: int = Field(default=10, ge=1, le=50)
+    brief_soft_max_articles: int = Field(default=18, ge=1, le=50)
+    brief_hard_max_articles: int = Field(default=20, ge=1, le=50)
+    brief_max_tag_share: float = Field(default=0.35, ge=0.1, le=1.0)
+    brief_serendipity_slots: int = Field(default=2, ge=0, le=5)
+    telemetry_half_life_days: float = Field(default=14.0, ge=1.0, le=180.0)
+    telemetry_retention_days: int = Field(default=180, ge=30, le=730)
 
     # ── Duplicate Detection ────────────────────────────────────────────────────
     semantic_similarity_threshold: float = Field(default=0.92, ge=0.0, le=1.0)
 
     # ── Intelligence Engine ─────────────────────────────────────────────────
     notification_priority_threshold: float = Field(default=80.0, ge=0.0, le=100.0)
+    breaking_interrupt_threshold: float = Field(default=85.0, ge=0.0, le=100.0)
+    notification_quiet_hours_start: int = Field(default=22, ge=0, le=23)
+    notification_quiet_hours_end: int = Field(default=7, ge=0, le=23)
     news_fetch_interval_hours: int = Field(default=2, ge=1, le=24)
     breaking_news_age_hours: float = Field(default=4.0, ge=1.0, le=12.0)
     trending_window_hours: int = Field(default=24, ge=6, le=168)

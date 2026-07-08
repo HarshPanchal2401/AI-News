@@ -6,6 +6,7 @@ Endpoints for browsing, searching, and fetching articles.
 
 from __future__ import annotations
 
+import json
 import math
 import uuid
 from datetime import date
@@ -20,7 +21,7 @@ from app.core.exceptions import NotFoundError
 from app.database.connection import get_db
 from app.models.news_article import NewsArticle
 from app.models.news_analysis import NewsAnalysis
-from app.models.user import User
+from app.models.user import User, UserPreferences
 from app.schemas import (
     NewsArticleListResponse,
     NewsArticleResponse,
@@ -31,6 +32,37 @@ from app.utils.date_utils import start_of_day, utcnow
 from app.utils.text_utils import normalize_title
 
 router = APIRouter(prefix="/news", tags=["News"])
+
+
+async def _top_brief_fallback_articles(db: AsyncSession, limit: int = 8) -> list[NewsArticle]:
+    """Return ranked verified articles when a personalized brief is empty."""
+    result = await db.execute(
+        select(NewsArticle)
+        .options(selectinload(NewsArticle.analysis))
+        .where(
+            NewsArticle.is_verified == True,  # noqa: E712
+            NewsArticle.is_duplicate == False,  # noqa: E712
+        )
+        .order_by(
+            NewsArticle.final_score.desc(),
+            NewsArticle.priority_score.desc(),
+            NewsArticle.created_at.desc(),
+        )
+        .limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+def _is_placeholder_analysis(article: NewsArticle) -> bool:
+    """Detect source-description placeholders that still need Gemini analysis."""
+    analysis = article.analysis
+    if not analysis:
+        return True
+    if analysis.model_used == "live-fetcher":
+        return True
+    source_text = (article.description or article.content_snippet or "").strip()
+    summary_text = (analysis.summary or "").strip()
+    return bool(source_text and summary_text and source_text[:500] == summary_text[:500])
 
 
 # ── Live Fetch Endpoint (No DB required) ──────────────────────────────────────
@@ -186,12 +218,16 @@ async def fetch_live_news(
     # Build list of normalized URLs
     url_to_dict = {normalize_url(item["url"]): item for item in articles_dict_list}
     if url_to_dict:
-        # Check existing URLs in database
-        stmt = select(NewsArticle.normalized_url).where(
+        # Check existing URLs in database and attach IDs so the frontend can
+        # open the normal detail drawer immediately after live generation.
+        stmt = select(NewsArticle.id, NewsArticle.normalized_url).where(
             NewsArticle.normalized_url.in_(list(url_to_dict.keys()))
         )
         res = await db.execute(stmt)
-        existing_urls = set(res.scalars().all())
+        existing_url_to_id = {row.normalized_url: str(row.id) for row in res.all()}
+        existing_urls = set(existing_url_to_id)
+        for norm_url, article_id in existing_url_to_id.items():
+            url_to_dict[norm_url]["id"] = article_id
 
         to_insert = []
         for norm_url, article_data in url_to_dict.items():
@@ -215,6 +251,7 @@ async def fetch_live_news(
                 category = "Healthcare"
             elif any(k in text for k in ["finance", "bank", "stock", "funding", "raises"]):
                 category = "Finance"
+            article_data["category"] = category
 
             t_fp = title_fingerprint(article_data['title'])
             c_fp = content_fingerprint(article_data['title'], article_data['description'] or "")
@@ -259,10 +296,21 @@ async def fetch_live_news(
             )
             db_art.analysis = db_analysis
             to_insert.append(db_art)
+            article_data["_db_article"] = db_art
 
         if to_insert:
             db.add_all(to_insert)
+            await db.flush()
+            for article_data in url_to_dict.values():
+                db_art = article_data.pop("_db_article", None)
+                if db_art:
+                    article_data["id"] = str(db_art.id)
             await db.commit()
+
+        for article_data in url_to_dict.values():
+            article_data.setdefault("category", "General AI")
+            article_data.setdefault("final_score", article_data.get("importance_score", 0))
+            article_data.setdefault("trust_score", 75.0)
 
     # ── Build response ────────────────────────────────────────────────────────
     return {
@@ -460,6 +508,50 @@ async def search_news(
 
 
 @router.get(
+    "/daily-brief",
+    response_model=list[NewsArticleListResponse],
+    summary="Get personalized daily brief",
+)
+async def get_daily_brief(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[NewsArticleListResponse]:
+    """
+    Returns today's quality-thresholded, diversity-aware personalized brief.
+    """
+    from app.models import DailyBrief
+    from app.services.personalization.engine import PersonalizationEngine
+    from app.utils.date_utils import today_utc
+
+    today = today_utc()
+    brief_result = await db.execute(
+        select(DailyBrief).where(
+            DailyBrief.user_id == current_user.id,
+            DailyBrief.brief_date == today,
+        )
+    )
+    brief = brief_result.scalar_one_or_none()
+    if not brief:
+        engine = PersonalizationEngine(db)
+        brief = await engine.generate_brief_for_user(current_user.id)
+        await db.commit()
+    if not brief or not brief.article_ids:
+        fallback_articles = await _top_brief_fallback_articles(db)
+        return [_article_to_list_schema(a) for a in fallback_articles]
+
+    article_ids = [uuid.UUID(str(aid)) for aid in brief.article_ids]
+    result = await db.execute(
+        select(NewsArticle)
+        .options(selectinload(NewsArticle.analysis))
+        .where(NewsArticle.id.in_(article_ids))
+    )
+    article_map = {str(article.id): article for article in result.scalars().all()}
+    articles = [article_map[str(aid)] for aid in article_ids if str(aid) in article_map]
+
+    return [_article_to_list_schema(a) for a in articles]
+
+
+@router.get(
     "/{article_id}",
     response_model=NewsArticleResponse,
     summary="Get full article details by ID",
@@ -525,12 +617,13 @@ async def analyze_article(
     if not article:
         raise NotFoundError("Article", article_id)
         
-    if not article.analysis:
+    if _is_placeholder_analysis(article):
         from app.services.ai.analyzer import BatchArticleProcessor
         processor = BatchArticleProcessor(db)
         await processor.process_article(article)
-        
-        # Refresh article to include analysis
+        await db.commit()
+
+        # Refresh article to include the new Gemini analysis.
         stmt = (
             select(NewsArticle)
             .options(selectinload(NewsArticle.analysis))
@@ -539,16 +632,60 @@ async def analyze_article(
         result = await db.execute(stmt)
         article = result.scalar_one()
 
-    # Clear cache
-    redis = get_redis_client()
-    cache_key = f"news:detail:{article_id}"
-    await redis.delete(cache_key)
+        # Clear cache only when the stored analysis changed.
+        redis = get_redis_client()
+        cache_key = f"news:detail:{article_id}"
+        await redis.delete(cache_key)
 
     return _article_to_detail_schema(article)
 
 
+@router.post(
+    "/{article_id}/translate-summary",
+    summary="Translate a generated AI summary",
+)
+async def translate_article_summary(
+    article_id: uuid.UUID,
+    language: str = Query(..., pattern="^(hi|gu)$"),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, str]:
+    """
+    Translate the Gemini-generated summary into Hindi or Gujarati.
+    """
+    stmt = (
+        select(NewsArticle)
+        .options(selectinload(NewsArticle.analysis))
+        .where(NewsArticle.id == article_id)
+    )
+    result = await db.execute(stmt)
+    article = result.scalar_one_or_none()
+    if not article:
+        raise NotFoundError("Article", article_id)
+
+    if _is_placeholder_analysis(article):
+        from app.services.ai.analyzer import BatchArticleProcessor
+        processor = BatchArticleProcessor(db)
+        await processor.process_article(article)
+        await db.commit()
+        result = await db.execute(stmt)
+        article = result.scalar_one()
+
+    summary = article.analysis.summary if article.analysis else ""
+    language_name = "Hindi" if language == "hi" else "Gujarati"
+    prompt = (
+        f"Translate this AI news summary into natural {language_name}. "
+        "Keep names, model names, company names, and technical terms accurate. "
+        "Return only the translated summary, no markdown.\n\n"
+        f"Summary:\n{summary}"
+    )
+
+    from app.services.ai.gemini_client import get_gemini_client
+    translated = await get_gemini_client().generate_text(prompt)
+    return {"language": language, "text": translated.strip()}
+
+
 @router.get(
-    "/daily-brief",
+    "/daily-brief-legacy",
     response_model=list[NewsArticleListResponse],
     summary="Get personalized daily brief",
 )
@@ -557,70 +694,36 @@ async def get_daily_brief(
     current_user: User = Depends(get_current_user),
 ) -> list[NewsArticleListResponse]:
     """
-    Returns top 5 articles for the user based on their preferences.
+    Returns today's quality-thresholded, diversity-aware personalized brief.
     """
-    from app.models.user import UserPreferences
-    from sqlalchemy import desc
-    from sqlalchemy.orm import selectinload
+    from app.models import DailyBrief
+    from app.services.personalization.engine import PersonalizationEngine
+    from app.utils.date_utils import today_utc
 
-    result = await db.execute(
-        select(UserPreferences).where(UserPreferences.user_id == current_user.id)
+    today = today_utc()
+    brief_result = await db.execute(
+        select(DailyBrief).where(
+            DailyBrief.user_id == current_user.id,
+            DailyBrief.brief_date == today,
+        )
     )
-    prefs = result.scalar_one_or_none()
-    from app.models.news_analysis import NewsAnalysis
-    
-    stmt = (
+    brief = brief_result.scalar_one_or_none()
+    if not brief:
+        engine = PersonalizationEngine(db)
+        brief = await engine.generate_brief_for_user(current_user.id)
+        await db.commit()
+    if not brief or not brief.article_ids:
+        fallback_articles = await _top_brief_fallback_articles(db)
+        return [_article_to_list_schema(a) for a in fallback_articles]
+
+    article_ids = [uuid.UUID(str(aid)) for aid in brief.article_ids]
+    result = await db.execute(
         select(NewsArticle)
         .options(selectinload(NewsArticle.analysis))
-        .where(
-            NewsArticle.is_verified == True,
-            NewsArticle.is_duplicate == False,
-        )
+        .where(NewsArticle.id.in_(article_ids))
     )
-
-    if prefs:
-        from sqlalchemy import or_, not_
-        
-        match_conditions = []
-        if prefs.favorite_categories:
-            match_conditions.append(NewsAnalysis.category.in_(prefs.favorite_categories))
-            
-        if prefs.favorite_companies:
-            for comp in prefs.favorite_companies:
-                match_conditions.append(NewsAnalysis.companies.any(comp))
-                
-        if prefs.favorite_topics:
-            for topic in prefs.favorite_topics:
-                match_conditions.append(NewsAnalysis.keywords.any(topic.lower()))
-                
-        if match_conditions:
-            stmt = stmt.outerjoin(NewsAnalysis, NewsArticle.id == NewsAnalysis.article_id)
-            stmt = stmt.where(or_(*match_conditions))
-            
-        if prefs.blocked_topics:
-            if not match_conditions:
-                stmt = stmt.outerjoin(NewsAnalysis, NewsArticle.id == NewsAnalysis.article_id)
-            for topic in prefs.blocked_topics:
-                stmt = stmt.where(not_(NewsAnalysis.keywords.any(topic.lower())))
-
-    stmt = stmt.order_by(desc(NewsArticle.final_score)).limit(5)
-    result = await db.execute(stmt)
-    articles = list(result.scalars().all())
-
-    # Fallback: if no personalized matches found, return top 5 articles from the database
-    if not articles:
-        fallback_stmt = (
-            select(NewsArticle)
-            .options(selectinload(NewsArticle.analysis))
-            .where(
-                NewsArticle.is_verified == True,
-                NewsArticle.is_duplicate == False,
-            )
-            .order_by(desc(NewsArticle.priority_score), desc(NewsArticle.created_at))
-            .limit(5)
-        )
-        fallback_result = await db.execute(fallback_stmt)
-        articles = list(fallback_result.scalars().all())
+    article_map = {str(article.id): article for article in result.scalars().all()}
+    articles = [article_map[str(aid)] for aid in article_ids if str(aid) in article_map]
 
     return [_article_to_list_schema(a) for a in articles]
 

@@ -1,11 +1,12 @@
 """
-AI Pulse – FCM Notification Service
-=====================================
+AI Pulse - FCM Notification Service
+===================================
 Firebase Cloud Messaging integration for push notifications.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime, timezone
 
@@ -13,10 +14,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import NotificationError
 from app.core.logging import get_logger
 from app.models import DailyBrief, Notification
-from app.models.user import User
+from app.models.user import User, UserPreferences
 
 logger = get_logger(__name__)
 
@@ -28,11 +28,10 @@ def _initialize_firebase() -> None:
         from firebase_admin import credentials
 
         if firebase_admin._apps:
-            return  # Already initialized
+            return
 
         if settings.firebase_credentials_json:
-            cred_dict = json.loads(settings.firebase_credentials_json)
-            cred = credentials.Certificate(cred_dict)
+            cred = credentials.Certificate(json.loads(settings.firebase_credentials_json))
         elif settings.firebase_credentials_path:
             cred = credentials.Certificate(settings.firebase_credentials_path)
         else:
@@ -41,7 +40,6 @@ def _initialize_firebase() -> None:
 
         firebase_admin.initialize_app(cred)
         logger.info("firebase_initialized")
-
     except Exception as exc:
         logger.error("firebase_initialization_failed", error=str(exc))
 
@@ -52,6 +50,9 @@ class FCMClient:
     def __init__(self) -> None:
         _initialize_firebase()
 
+    def is_available(self) -> bool:
+        return bool(settings.firebase_credentials_json or settings.firebase_credentials_path)
+
     async def send_notification(
         self,
         fcm_token: str,
@@ -59,20 +60,10 @@ class FCMClient:
         body: str,
         data: dict | None = None,
     ) -> str | None:
-        """
-        Send a push notification to a single device.
-
-        Args:
-            fcm_token: FCM registration token.
-            title: Notification title.
-            body: Notification body text.
-            data: Additional data payload for deep linking.
-
-        Returns:
-            FCM message ID on success, None on failure.
-        """
+        """Send a push notification to a single device."""
         try:
             from firebase_admin import messaging
+            import asyncio
 
             message = messaging.Message(
                 notification=messaging.Notification(title=title, body=body),
@@ -97,20 +88,10 @@ class FCMClient:
                 ),
             )
 
-            import asyncio
             loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None,
-                lambda: messaging.send(message),
-            )
-            return response
-
+            return await loop.run_in_executor(None, lambda: messaging.send(message))
         except Exception as exc:
-            logger.error(
-                "fcm_send_failed",
-                token=fcm_token[:20] + "...",
-                error=str(exc),
-            )
+            logger.error("fcm_send_failed", token=fcm_token[:20] + "...", error=str(exc))
             return None
 
     async def send_batch(
@@ -120,12 +101,7 @@ class FCMClient:
         body: str,
         data: dict | None = None,
     ) -> dict[str, int]:
-        """
-        Send a notification to multiple devices (up to 500 per call).
-
-        Returns:
-            Stats dict: {success_count, failure_count}.
-        """
+        """Send a notification to multiple devices, up to 500 per batch."""
         if not tokens:
             return {"success_count": 0, "failure_count": 0}
 
@@ -141,27 +117,57 @@ class FCMClient:
                 )
                 for token in tokens[:500]
             ]
-
             loop = asyncio.get_event_loop()
             batch_response = await loop.run_in_executor(
                 None,
                 lambda: messaging.send_each(messages),
             )
-
             return {
                 "success_count": batch_response.success_count,
                 "failure_count": batch_response.failure_count,
             }
-
         except Exception as exc:
             logger.error("fcm_batch_send_failed", error=str(exc))
             return {"success_count": 0, "failure_count": len(tokens)}
 
+    async def send_to_topic(
+        self,
+        topic: str,
+        title: str,
+        body: str,
+        data: dict | None = None,
+    ) -> bool:
+        """Send a notification to an FCM topic."""
+        if not self.is_available():
+            logger.debug("fcm_not_configured_skipping_topic", topic=topic)
+            return True
+        try:
+            from firebase_admin import messaging
+            import asyncio
+
+            message = messaging.Message(
+                notification=messaging.Notification(title=title, body=body),
+                data={k: str(v) for k, v in (data or {}).items()},
+                topic=topic,
+                android=messaging.AndroidConfig(
+                    priority="high",
+                    notification=messaging.AndroidNotification(
+                        icon="notification_icon",
+                        color="#6366f1",
+                        channel_id="ai_pulse_breaking",
+                    ),
+                ),
+            )
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(None, lambda: messaging.send(message))
+            return bool(response)
+        except Exception as exc:
+            logger.error("fcm_topic_send_failed", topic=topic, error=str(exc))
+            return False
+
 
 class DailyNotificationSender:
-    """
-    Sends daily brief push notifications to all eligible users.
-    """
+    """Sends daily brief push notifications to all eligible users."""
 
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -169,21 +175,18 @@ class DailyNotificationSender:
 
     async def send_all(self) -> dict[str, int]:
         """
-        Send daily brief notifications to all users with:
-        - notifications enabled
-        - a daily brief generated for today
-        - an FCM token registered
+        Send daily brief notifications.
 
-        Returns:
-            Stats dict: {sent, skipped, failed}.
+        Pattern selection is deterministic rotation per user/day:
+        career_action, hype_filter, direct_tool_drop. Quiet hours use UTC until
+        the schema stores an IANA timezone; converting with zoneinfo later will
+        give correct timezone and DST behavior.
         """
         from app.utils.date_utils import today_utc, utcnow
 
         today = today_utc()
-
-        # Get users who have today's brief and haven't been notified
         stmt = (
-            select(User, DailyBrief)
+            select(User, DailyBrief, UserPreferences)
             .join(DailyBrief, DailyBrief.user_id == User.id)
             .join(UserPreferences, UserPreferences.user_id == User.id, isouter=True)
             .where(
@@ -193,20 +196,6 @@ class DailyNotificationSender:
                 DailyBrief.notification_sent == False,  # noqa: E712
             )
         )
-
-        from app.models.user import UserPreferences
-
-        stmt = (
-            select(User, DailyBrief)
-            .join(DailyBrief, DailyBrief.user_id == User.id)
-            .where(
-                User.is_active == True,  # noqa: E712
-                User.fcm_token.is_not(None),
-                DailyBrief.brief_date == today,
-                DailyBrief.notification_sent == False,  # noqa: E712
-            )
-        )
-
         result = await self.db.execute(stmt)
         rows = result.all()
 
@@ -214,14 +203,18 @@ class DailyNotificationSender:
             logger.info("no_pending_notifications")
             return {"sent": 0, "skipped": 0, "failed": 0}
 
-        sent = 0
-        skipped = 0
-        failed = 0
-
-        for user, brief in rows:
+        sent = skipped = failed = 0
+        for user, brief, preferences in rows:
             try:
-                title = "📰 Your AI Daily Brief is Ready"
-                body = f"Today's top {brief.total_articles} AI stories — personalized for you."
+                if preferences and not preferences.notification_enabled:
+                    skipped += 1
+                    continue
+                if not self._should_send_now(preferences):
+                    skipped += 1
+                    continue
+
+                pattern = self._notification_pattern(user, brief)
+                title, body = self._build_daily_content(pattern, brief)
 
                 msg_id = await self.fcm.send_notification(
                     fcm_token=user.fcm_token,
@@ -229,26 +222,24 @@ class DailyNotificationSender:
                     body=body,
                     data={
                         "type": "daily_brief",
+                        "pattern": pattern,
                         "brief_id": str(brief.id),
                         "brief_date": str(brief.brief_date),
                         "article_count": str(brief.total_articles),
                     },
                 )
 
-                # Record the notification
-                notification = Notification(
+                self.db.add(Notification(
                     user_id=user.id,
                     title=title,
                     body=body,
                     notification_type="daily_brief",
-                    data={"brief_id": str(brief.id)},
+                    data={"brief_id": str(brief.id), "pattern": pattern},
                     sent_at=utcnow(),
                     fcm_message_id=msg_id,
                     delivery_status="sent" if msg_id else "failed",
-                )
-                self.db.add(notification)
+                ))
 
-                # Mark brief as notified
                 brief.notification_sent = True
                 brief.sent_at = utcnow()
 
@@ -256,22 +247,41 @@ class DailyNotificationSender:
                     sent += 1
                 else:
                     failed += 1
-
             except Exception as exc:
-                logger.error(
-                    "notification_send_error",
-                    user_id=str(user.id),
-                    error=str(exc),
-                )
+                logger.error("notification_send_error", user_id=str(user.id), error=str(exc))
                 failed += 1
 
         await self.db.commit()
-
-        logger.info(
-            "notifications_sent",
-            total=len(rows),
-            sent=sent,
-            skipped=skipped,
-            failed=failed,
-        )
+        logger.info("notifications_sent", total=len(rows), sent=sent, skipped=skipped, failed=failed)
         return {"sent": sent, "skipped": skipped, "failed": failed}
+
+    def _notification_pattern(self, user: User, brief: DailyBrief) -> str:
+        patterns = ["career_action", "hype_filter", "direct_tool_drop"]
+        seed = f"{user.id}:{brief.brief_date.isoformat()}".encode("utf-8")
+        return patterns[int(hashlib.sha256(seed).hexdigest(), 16) % len(patterns)]
+
+    def _build_daily_content(self, pattern: str, brief: DailyBrief) -> tuple[str, str]:
+        if pattern == "career_action":
+            return (
+                "Your AI Career Brief",
+                f"{brief.total_articles} high-signal stories with one concrete next step.",
+            )
+        if pattern == "hype_filter":
+            return (
+                "Today's AI Signal",
+                f"{brief.total_articles} items cleared the quality bar. No filler.",
+            )
+        return (
+            "New Tools Worth Checking",
+            f"{brief.total_articles} personalized AI updates are ready.",
+        )
+
+    def _should_send_now(self, preferences: UserPreferences | None) -> bool:
+        if not preferences:
+            return True
+        hour = datetime.now(timezone.utc).hour
+        quiet_start = settings.notification_quiet_hours_start
+        quiet_end = settings.notification_quiet_hours_end
+        if quiet_start <= quiet_end:
+            return not (quiet_start <= hour < quiet_end)
+        return not (hour >= quiet_start or hour < quiet_end)

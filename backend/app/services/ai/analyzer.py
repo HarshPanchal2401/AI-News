@@ -44,8 +44,23 @@ VALID_EVENT_TYPES = {
     "education_ai", "finance_ai",
 }
 
+REQUIRED_ANALYSIS_FIELDS = {
+    "summary": str,
+    "key_takeaways": list,
+    "why_it_matters": str,
+    "category": str,
+    "keywords": list,
+    "tags": list,
+    "companies": list,
+    "sentiment": str,
+    "urgency": str,
+    "confidence_score": (int, float),
+    "importance_score": (int, float),
+    "reading_time_minutes": int,
+}
+
 # ── Full 25-Field Analysis Prompt ─────────────────────────────────────────────
-ANALYSIS_PROMPT_V2 = """You are an expert AI industry analyst. Analyze this AI news article and return a JSON object with EXACTLY the fields below. Be accurate, specific, and factual.
+ANALYSIS_PROMPT_V2 = """You are an expert AI industry analyst. Analyze this AI news article and return a JSON object with EXACTLY the fields below. Be accurate, specific, and factual. Do not copy the article text into the summary; synthesize and paraphrase the news in your own words.
 
 Article Title: {title}
 Article URL: {url}
@@ -54,7 +69,7 @@ Article Content: {content}
 
 Return ONLY valid JSON (no markdown, no code blocks) with these exact fields:
 {{
-  "summary": "Clear, factual 2-4 sentence summary of what this article reports",
+  "summary": "Clear, factual 2-4 sentence summary in fresh wording, not copied from the article",
   "executive_summary": "5-8 sentence deeper analysis including context, significance, and implications for the AI industry",
   "key_takeaways": ["3-5 bullet points as strings, each a complete standalone insight"],
   "why_it_matters": "1-2 sentences on real-world impact for AI practitioners and businesses",
@@ -168,8 +183,90 @@ class ArticleAnalyzer:
             content=content,
         )
 
-        raw = await self.client.generate_json(prompt)
-        return self._parse_response(raw, title, content)
+        last_error: Exception | None = None
+        for attempt in range(3):
+            try:
+                retry_prompt = prompt
+                if attempt:
+                    retry_prompt += (
+                        "\n\nYour previous response failed schema validation. "
+                        "Return one valid JSON object only. Include every required field, "
+                        "use arrays for list fields, numbers for scores, and no markdown."
+                    )
+                raw = await self.client.generate_json(retry_prompt, max_retries=1)
+                self._validate_schema(raw)
+                return self._parse_response(raw, title, content)
+            except Exception as exc:
+                last_error = exc
+                logger.warning(
+                    "article_analysis_schema_retry",
+                    title=title[:80],
+                    attempt=attempt + 1,
+                    error=str(exc),
+                )
+
+        logger.error(
+            "article_analysis_degraded_default",
+            title=title[:80],
+            error=str(last_error),
+        )
+        return self._safe_default_analysis(title, content)
+
+    def _validate_schema(self, raw: dict) -> None:
+        """Validate Gemini output before coercive parsing."""
+        if not isinstance(raw, dict):
+            raise ValueError("Gemini output is not a JSON object")
+        missing = [field for field in REQUIRED_ANALYSIS_FIELDS if field not in raw]
+        if missing:
+            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        for field, expected_type in REQUIRED_ANALYSIS_FIELDS.items():
+            value = raw.get(field)
+            if not isinstance(value, expected_type):
+                raise ValueError(f"Invalid type for {field}")
+        if raw.get("category") not in VALID_CATEGORIES:
+            raise ValueError("Invalid category")
+        if raw.get("sentiment") not in VALID_SENTIMENTS:
+            raise ValueError("Invalid sentiment")
+        if raw.get("urgency") not in VALID_URGENCIES:
+            raise ValueError("Invalid urgency")
+
+    def _safe_default_analysis(self, title: str, content: str) -> AnalysisResult:
+        """Degraded but safe fallback when the LLM cannot satisfy the schema."""
+        summary = (
+            "AI summary could not be generated right now. "
+            f"Open the original source for the full article: {title}"
+        )
+        return AnalysisResult(
+            summary=summary,
+            executive_summary=summary,
+            key_takeaways=[title[:180]],
+            why_it_matters="No validated AI analysis was available; read the source before acting.",
+            category="General AI",
+            subcategory=None,
+            event_type=None,
+            keywords=[],
+            tags=["needs-review"],
+            companies=[],
+            products_mentioned=[],
+            people_mentioned=[],
+            technologies_mentioned=[],
+            programming_languages=[],
+            models_mentioned=[],
+            funding_amount=None,
+            funding_currency=None,
+            research_paper_url=None,
+            arxiv_id=None,
+            countries_affected=[],
+            industries_affected=[],
+            market_impact=None,
+            business_opportunities=None,
+            risks=None,
+            sentiment="neutral",
+            urgency="medium",
+            confidence_score=60.0,
+            importance_score=35.0,
+            reading_time_minutes=estimate_reading_time(content or title),
+        )
 
     def _parse_response(
         self, raw: dict, title: str, fallback_content: str
@@ -283,41 +380,43 @@ class BatchArticleProcessor:
                     content_snippet=article.content_snippet,
                 )
 
-                # Build or update NewsAnalysis
-                analysis = NewsAnalysis(
-                    article_id=article.id,
-                    summary=result.summary,
-                    executive_summary=result.executive_summary,
-                    key_takeaways=result.key_takeaways,
-                    why_it_matters=result.why_it_matters,
-                    category=result.category,
-                    subcategory=result.subcategory,
-                    event_type=result.event_type,
-                    keywords=result.keywords,
-                    tags=result.tags,
-                    companies=result.companies,
-                    products_mentioned=result.products_mentioned,
-                    people_mentioned=result.people_mentioned,
-                    technologies_mentioned=result.technologies_mentioned,
-                    programming_languages=result.programming_languages,
-                    models_mentioned=result.models_mentioned,
-                    funding_amount=result.funding_amount,
-                    funding_currency=result.funding_currency,
-                    research_paper_url=result.research_paper_url,
-                    arxiv_id=result.arxiv_id,
-                    countries_affected=result.countries_affected,
-                    industries_affected=result.industries_affected,
-                    market_impact=result.market_impact,
-                    business_opportunities=result.business_opportunities,
-                    risks=result.risks,
-                    sentiment=result.sentiment,
-                    urgency=result.urgency,
-                    confidence_score=result.confidence_score,
-                    importance_score=result.importance_score,
-                    reading_time_minutes=result.reading_time_minutes,
-                    model_used=settings.gemini_model,
-                    prompt_version="v2",
+                analysis = article.analysis or NewsAnalysis(article_id=article.id)
+                analysis.summary = result.summary
+                analysis.executive_summary = result.executive_summary
+                analysis.key_takeaways = result.key_takeaways
+                analysis.why_it_matters = result.why_it_matters
+                analysis.category = result.category
+                analysis.subcategory = result.subcategory
+                analysis.event_type = result.event_type
+                analysis.keywords = result.keywords
+                analysis.tags = result.tags
+                analysis.companies = result.companies
+                analysis.products_mentioned = result.products_mentioned
+                analysis.people_mentioned = result.people_mentioned
+                analysis.technologies_mentioned = result.technologies_mentioned
+                analysis.programming_languages = result.programming_languages
+                analysis.models_mentioned = result.models_mentioned
+                analysis.funding_amount = result.funding_amount
+                analysis.funding_currency = result.funding_currency
+                analysis.research_paper_url = result.research_paper_url
+                analysis.arxiv_id = result.arxiv_id
+                analysis.countries_affected = result.countries_affected
+                analysis.industries_affected = result.industries_affected
+                analysis.market_impact = result.market_impact
+                analysis.business_opportunities = result.business_opportunities
+                analysis.risks = result.risks
+                analysis.sentiment = result.sentiment
+                analysis.urgency = result.urgency
+                analysis.confidence_score = result.confidence_score
+                analysis.importance_score = result.importance_score
+                analysis.reading_time_minutes = result.reading_time_minutes
+                analysis.model_used = getattr(
+                    self.analyzer.client,
+                    "last_successful_model",
+                    settings.gemini_model,
                 )
+                analysis.prompt_version = "v2"
+                article.analysis = analysis
                 self.db.add(analysis)
 
                 # Update article

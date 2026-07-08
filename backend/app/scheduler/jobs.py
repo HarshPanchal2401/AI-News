@@ -292,7 +292,7 @@ async def job_generate_daily_digest() -> None:
                 if redis:
                     from datetime import date
                     cache_key = f"digest:{date.today().isoformat()}"
-                    await redis.set(cache_key, json_module.dumps(digest), ex=86400)
+                    await redis.set(cache_key, json_module.dumps(digest), ttl_seconds=86400)
                     logger.info("digest_cached", key=cache_key)
             except Exception as cache_err:
                 logger.warning("digest_cache_error", error=str(cache_err))

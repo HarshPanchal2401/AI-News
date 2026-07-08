@@ -774,6 +774,36 @@
       </div>
     </div>
 
+    <!-- ── AI Insights (Suggestions) View ── -->
+    <div class="content-area view-panel" id="view-suggestions">
+      <div class="section-title">AI Insights & Career Mentor <i data-lucide="sparkles" style="color: var(--accent); width: 18px; height: 18px;"></i></div>
+      
+      <!-- Toggle Tabs -->
+      <div style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 8px;">
+        <button id="tab-suggestions-personalized" onclick="setSuggestionsTab('personalized')" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: var(--accent); color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease;">
+          Career Mentor
+        </button>
+        <button id="tab-suggestions-market" onclick="setSuggestionsTab('market')" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease;">
+          Market Growth
+        </button>
+      </div>
+
+      <!-- Action Button -->
+      <button onclick="generateSuggestions()" style="width: 100%; padding: 14px; background: var(--accent-gradient); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(99,102,241,0.25); transition: transform 0.15s ease;">
+        <i data-lucide="brain-circuit" style="width: 18px; height: 18px;"></i>
+        <span>Analyze Context & Suggest Action Plan</span>
+      </button>
+
+      <!-- Results Container -->
+      <div id="suggestions-content">
+        <div class="article-card" style="text-align: center; padding: 40px 20px;">
+          <i data-lucide="lightbulb" style="margin: 0 auto 12px auto; width: 42px; height: 42px; color: var(--text-muted);"></i>
+          <div style="font-weight: 600; font-size: 1.05rem; color: var(--text-main);">Tap the button above to generate suggestions</div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5;">This will retrieve all active context (your behavior, preferences, daily briefs, and latest news) to provide AI-powered career growth insights and market upgrade strategies.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Profile / Preferences View ── -->
     <div class="content-area view-panel" id="view-profile" style="padding-bottom: 100px;">
       <!-- Profile Header Card -->
@@ -987,6 +1017,10 @@
       <div class="nav-item" onclick="switchView('bookmarks')">
         <i data-lucide="bookmark"></i>
         <span>Bookmarks</span>
+      </div>
+      <div class="nav-item" onclick="switchView('suggestions')">
+        <i data-lucide="sparkles"></i>
+        <span>AI Insights</span>
       </div>
       <div class="nav-item" onclick="switchView('profile')">
         <i data-lucide="user"></i>
@@ -1214,9 +1248,10 @@
       document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       
-      const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(item => 
-        item.querySelector('span').innerText.toLowerCase() === (viewName === 'feed' ? 'feed' : viewName === 'brief' ? 'daily brief' : viewName)
-      );
+      const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(item => {
+        const text = item.querySelector('span').innerText.toLowerCase();
+        return text === (viewName === 'feed' ? 'feed' : viewName === 'brief' ? 'daily brief' : viewName === 'suggestions' ? 'ai insights' : viewName);
+      });
       if (activeNav) activeNav.classList.add('active');
       
       const activePanel = document.getElementById(`view-${viewName}`);
@@ -1226,6 +1261,8 @@
         renderBookmarks();
       } else if (viewName === 'brief') {
         loadDailyBrief();
+      } else if (viewName === 'suggestions') {
+        loadSuggestionsUI();
       }
     }
 
@@ -1654,6 +1691,148 @@
         lucide.createIcons();
       } catch (err) {
         console.error("Error loading bookmarks:", err);
+      }
+    }
+
+    // --- AI Suggestions System ---
+    let currentSuggestionsTab = 'personalized';
+    let suggestionsData = {
+      personalized: null,
+      market: null
+    };
+
+    function setSuggestionsTab(tab) {
+      currentSuggestionsTab = tab;
+      
+      const persBtn = document.getElementById('tab-suggestions-personalized');
+      const markBtn = document.getElementById('tab-suggestions-market');
+      
+      if (tab === 'personalized') {
+        persBtn.style.background = 'var(--accent)';
+        persBtn.style.color = 'white';
+        markBtn.style.background = 'transparent';
+        markBtn.style.color = 'var(--text-muted)';
+      } else {
+        markBtn.style.background = 'var(--accent)';
+        markBtn.style.color = 'white';
+        persBtn.style.background = 'transparent';
+        persBtn.style.color = 'var(--text-muted)';
+      }
+      
+      renderSuggestions();
+    }
+
+    async function loadSuggestionsUI() {
+      renderSuggestions();
+    }
+
+    function renderSuggestions() {
+      const container = document.getElementById('suggestions-content');
+      const data = suggestionsData[currentSuggestionsTab];
+      
+      if (!data) {
+        container.innerHTML = `
+          <div class="article-card" style="text-align: center; padding: 40px 20px;">
+            <i data-lucide="lightbulb" style="margin: 0 auto 12px auto; width: 42px; height: 42px; color: var(--text-muted);"></i>
+            <div style="font-weight: 600; font-size: 1.05rem; color: var(--text-main);">Tap the button above to generate ${currentSuggestionsTab === 'personalized' ? 'Career Mentor' : 'Market Growth'} suggestions</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5;">This will retrieve all active context (your behavior, preferences, daily briefs, and latest news) to provide AI-powered career growth insights and market upgrade strategies.</div>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+      
+      let html = '';
+      
+      // Render Summary Card
+      if (data.summary) {
+        html += `
+          <div class="article-card" style="background: linear-gradient(135deg, rgba(20,184,166,0.1) 0%, rgba(99,102,241,0.08) 100%); border: 1px solid rgba(99,102,241,0.2); border-radius: 12px; margin-bottom: 20px; padding: 16px;">
+            <div style="font-weight: 700; font-size: 0.75rem; text-transform: uppercase; color: var(--accent); letter-spacing: 0.8px; margin-bottom: 8px;">Overall Strategy Summary</div>
+            <div style="font-size: 0.88rem; line-height: 1.5; color: var(--text-main); font-weight: 500;">${data.summary}</div>
+          </div>
+        `;
+      }
+      
+      // Render suggestions
+      if (data.suggestions && data.suggestions.length > 0) {
+        data.suggestions.forEach(sug => {
+          const impactColor = sug.impact === 'High' ? '#10b981' : sug.impact === 'Medium' ? '#f59e0b' : '#9ca3af';
+          const impactBg = sug.impact === 'High' ? 'rgba(16,185,129,0.12)' : sug.impact === 'Medium' ? 'rgba(245,158,11,0.12)' : 'rgba(156,163,175,0.12)';
+          
+          html += `
+            <div class="article-card" style="border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 16px; padding: 18px; background: var(--bg-card); transition: all 0.2s ease;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 8px;">
+                <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); line-height: 1.3;">${sug.title}</div>
+                <span style="background: ${impactBg}; color: ${impactColor}; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 30px; white-space: nowrap;">
+                  ${sug.impact} Impact
+                </span>
+              </div>
+              
+              <div style="font-size: 0.86rem; line-height: 1.5; color: var(--text-main); margin-bottom: 12px; font-weight: 450;">
+                ${sug.description}
+              </div>
+              
+              <div style="background: rgba(99,102,241,0.06); border-left: 3px solid var(--accent); padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 12px; font-size: 0.82rem; color: var(--text-main); font-weight: 500;">
+                <strong>Growth Action:</strong> ${sug.action_item}
+              </div>
+              
+              <div style="font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+                <i data-lucide="info" style="width: 12px; height: 12px; color: var(--accent);"></i>
+                <span>${sug.relevance}</span>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        html += `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">No recommendations generated.</div>`;
+      }
+      
+      container.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    async function generateSuggestions() {
+      const container = document.getElementById('suggestions-content');
+      container.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+          <div class="pulse-loader" style="width: 50px; height: 50px; background: var(--accent-gradient); border-radius: 50%; margin: 0 auto 20px auto; animation: pulse 1.5s infinite ease-in-out;"></div>
+          <div style="font-weight: 600; font-size: 1rem; color: var(--text-main);">AI Coach is analyzing app context...</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">Retrieving news, user preferences, bookmarks, and briefings to build growth strategy...</div>
+        </div>
+      `;
+      
+      // Inject pulse animation CSS dynamically if not present
+      if (!document.getElementById('pulse-loader-style')) {
+        const style = document.createElement('style');
+        style.id = 'pulse-loader-style';
+        style.innerHTML = `
+          @keyframes pulse {
+            0% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(99,102,241,0); }
+            100% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      try {
+        const res = await authenticatedFetch(`/api/v1/intelligence/suggestions?suggestion_type=${currentSuggestionsTab}`);
+        if (!res.ok) throw new Error("Failed to generate suggestions");
+        const data = await res.json();
+        suggestionsData[currentSuggestionsTab] = data;
+        renderSuggestions();
+      } catch (err) {
+        console.error("Error generating suggestions:", err);
+        container.innerHTML = `
+          <div class="article-card" style="text-align: center; padding: 40px 20px; border-color: #ef4444;">
+            <i data-lucide="alert-circle" style="margin: 0 auto 12px auto; width: 42px; height: 42px; color: #ef4444;"></i>
+            <div style="font-weight: 600; font-size: 1.05rem; color: #ef4444;">Failed to generate suggestions</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5;">${err.message || 'An unexpected error occurred. Please verify your internet connection and API keys.'}</div>
+            <button onclick="generateSuggestions()" style="margin-top: 16px; padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Try Again</button>
+          </div>
+        `;
+        lucide.createIcons();
       }
     }
 

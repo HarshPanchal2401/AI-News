@@ -21,17 +21,31 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.models.news_event import NewsEvent
+from app.models.news_article import NewsArticle
+from app.models.user import User, UserPreferences
 from app.services.priority_engine import PriorityEngine
 
 logger = get_logger(__name__)
 
 # Default priority threshold for notifications
-DEFAULT_NOTIFICATION_THRESHOLD = 80.0
+DEFAULT_NOTIFICATION_THRESHOLD = settings.breaking_interrupt_threshold
+
+INTERRUPT_EVENT_TYPES = {
+    "model_release",
+    "product_launch",
+    "api_release",
+    "security_incident",
+    "government_regulation",
+    "open_source_release",
+    "infrastructure",
+    "gpu",
+}
 
 
 class NotificationDispatcher:
@@ -60,7 +74,7 @@ class NotificationDispatcher:
         Returns:
             Stats: {events_found, notifications_sent, errors}
         """
-        effective_threshold = threshold or DEFAULT_NOTIFICATION_THRESHOLD
+        effective_threshold = threshold or settings.breaking_interrupt_threshold
 
         # Find unnotified high-priority events
         stmt = (
@@ -83,8 +97,17 @@ class NotificationDispatcher:
 
         for event in events:
             try:
+                if not self.is_interrupt_worthy(event, effective_threshold):
+                    logger.info(
+                        "breaking_candidate_deferred",
+                        event_id=str(event.id),
+                        event_type=event.event_type,
+                        priority=event.priority_score,
+                    )
+                    continue
                 sent = await self._dispatch_event_notification(event)
                 if sent:
+                    await self._update_personalized_brief_caches(event)
                     event.notification_sent = True
                     event.notification_sent_at = datetime.now(timezone.utc)
                     stats["notifications_sent"] += 1
@@ -109,6 +132,74 @@ class NotificationDispatcher:
             errors=stats["errors"],
         )
         return stats
+
+    def is_interrupt_worthy(self, event: NewsEvent, threshold: float | None = None) -> bool:
+        """
+        Breaking interrupt criteria.
+
+        Qualifies immediately when base priority crosses the configured
+        threshold and the story is a frontier model/product/API launch, a
+        critical security or regulation event, a major outage/infrastructure
+        item, or an exceptionally high-priority global story.
+        """
+        effective_threshold = threshold or settings.breaking_interrupt_threshold
+        if event.priority_score < effective_threshold:
+            return False
+        if event.priority_score >= 95.0:
+            return True
+        return (event.event_type or "") in INTERRUPT_EVENT_TYPES
+
+    async def _update_personalized_brief_caches(self, event: NewsEvent) -> None:
+        """Merge interrupt delta articles into affected users' cached daily briefs."""
+        if not self.is_interrupt_worthy(event):
+            return
+
+        article_result = await self.db.execute(
+            select(NewsArticle)
+            .options(selectinload(NewsArticle.analysis))
+            .where(NewsArticle.event_id == event.id)
+            .limit(10)
+        )
+        delta_articles = list(article_result.scalars().all())
+        if not delta_articles:
+            return
+
+        user_result = await self.db.execute(
+            select(User, UserPreferences)
+            .join(UserPreferences, UserPreferences.user_id == User.id, isouter=True)
+            .where(User.is_active == True)  # noqa: E712
+            .limit(1000)
+        )
+
+        from app.services.personalization.engine import PersonalizationEngine
+        personalization = PersonalizationEngine(self.db)
+
+        affected = 0
+        event_terms = {
+            (event.category or "").lower(),
+            (event.event_type or "").lower(),
+            *(t.lower() for t in (event.tags or [])),
+            *(c.lower() for c in (event.companies or [])),
+            *(m.lower() for m in (event.models_mentioned or [])),
+        }
+        for user, prefs in user_result.all():
+            if event.priority_score < 95.0 and prefs:
+                pref_terms = {
+                    *(t.lower() for t in (prefs.favorite_categories or [])),
+                    *(t.lower() for t in (prefs.favorite_topics or [])),
+                    *(t.lower() for t in (prefs.favorite_companies or [])),
+                }
+                if pref_terms and not (pref_terms & event_terms):
+                    continue
+            await personalization.incorporate_breaking_delta(user.id, delta_articles)
+            affected += 1
+
+        logger.info(
+            "breaking_delta_briefs_updated",
+            event_id=str(event.id),
+            affected_users=affected,
+            delta_articles=len(delta_articles),
+        )
 
     async def _dispatch_event_notification(self, event: NewsEvent) -> bool:
         """

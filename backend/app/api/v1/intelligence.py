@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select, and_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy.orm import selectinload
 from app.api.dependencies import get_db, get_optional_user
 from app.core.logging import get_logger
 from app.models.news_event import NewsEvent
@@ -443,6 +444,218 @@ async def trigger_pipeline(
         "run_ai": run_ai,
         "run_trends": run_trends,
     }
+
+
+# ── Suggestions API ───────────────────────────────────────────────────────────
+
+from app.api.dependencies import get_current_user
+from app.models.user import UserPreferences
+from app.models import DailyBrief, Bookmark
+from app.models.news_article import NewsArticle
+
+@router.get(
+    "/suggestions",
+    summary="Get AI-powered career mentorship and market recommendations",
+)
+async def get_suggestions(
+    suggestion_type: str = Query(default="personalized", description="personalized | market"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    """
+    Returns AI-generated career mentor or market growth suggestions.
+    Uses current news, daily briefs, and user telemetry as context.
+    """
+    import json
+    from app.services.cache.redis_client import get_redis_client
+    from app.services.ai.gemini_client import get_gemini_client
+    from app.utils.date_utils import today_utc
+
+    if suggestion_type not in ("personalized", "market"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="suggestion_type must be 'personalized' or 'market'",
+        )
+
+    # Cache check
+    redis = get_redis_client()
+    cache_key = f"suggestions:{suggestion_type}:{current_user.id}"
+    try:
+        if redis:
+            cached = await redis.get(cache_key)
+            if cached:
+                return json.loads(cached)
+    except Exception as exc:
+        logger.warning("suggestions_cache_read_error", error=str(exc))
+
+    # 1. Fetch user preferences
+    prefs_stmt = select(UserPreferences).where(UserPreferences.user_id == current_user.id)
+    prefs_result = await db.execute(prefs_stmt)
+    prefs = prefs_result.scalar_one_or_none()
+
+    # 2. Fetch user bookmarks
+    bookmarks_stmt = (
+        select(Bookmark)
+        .options(selectinload(Bookmark.article))
+        .where(Bookmark.user_id == current_user.id)
+        .limit(10)
+    )
+    bookmarks_result = await db.execute(bookmarks_stmt)
+    bookmarks = list(bookmarks_result.scalars().all())
+
+    # 3. Fetch today's daily brief
+    today = today_utc()
+    brief_stmt = select(DailyBrief).where(
+        DailyBrief.user_id == current_user.id,
+        DailyBrief.brief_date == today,
+    )
+    brief_result = await db.execute(brief_stmt)
+    brief = brief_result.scalar_one_or_none()
+    
+    brief_article_titles = []
+    if brief and brief.article_ids:
+        brief_article_ids = [uuid.UUID(str(aid)) for aid in brief.article_ids]
+        brief_arts_stmt = select(NewsArticle).where(NewsArticle.id.in_(brief_article_ids))
+        brief_arts_res = await db.execute(brief_arts_stmt)
+        brief_article_titles = [a.title for a in brief_arts_res.scalars().all()]
+
+    # 4. Fetch recent top news articles (context of news)
+    recent_stmt = (
+        select(NewsArticle)
+        .options(selectinload(NewsArticle.analysis))
+        .where(NewsArticle.is_verified == True, NewsArticle.is_duplicate == False)
+        .order_by(desc(NewsArticle.final_score), desc(NewsArticle.created_at))
+        .limit(15)
+    )
+    recent_result = await db.execute(recent_stmt)
+    recent_articles = list(recent_result.scalars().all())
+
+    recent_news_context = [
+        {
+            "title": art.title,
+            "category": art.analysis.category if art.analysis else "General",
+            "summary": art.analysis.summary if art.analysis else art.description,
+            "companies": art.analysis.companies if art.analysis else [],
+            "keywords": art.analysis.keywords if art.analysis else []
+        }
+        for art in recent_articles
+    ]
+
+    # Generate prompt
+    user_name = current_user.display_name or "Developer"
+    if suggestion_type == "personalized":
+        user_profile = {
+            "name": user_name,
+            "favorite_categories": prefs.favorite_categories if prefs else [],
+            "favorite_companies": prefs.favorite_companies if prefs else [],
+            "favorite_topics": prefs.favorite_topics if prefs else [],
+            "bookmarked_articles": [b.article.title for b in bookmarks if b.article],
+            "today_brief_articles": brief_article_titles
+        }
+
+        prompt = f"""You are a senior AI career mentor and technical strategist.
+Analyze the user's profile and behavioral context (bookmarks/preferences) along with the latest news to construct exactly 3 personalized recommendations.
+
+User Profile Context:
+{json.dumps(user_profile, indent=2)}
+
+Latest AI News & Advancements:
+{json.dumps(recent_news_context[:10], indent=2)}
+
+You MUST formulate each recommendation to start with a mentorship advice block following this strict template structure:
+"Hey [Name], since you're tracking [behavior topic], you should check out [news item tool/concept] today. It directly impacts your work with [user skill/topic] because [reason]. Spend 10 minutes reading their docs to stay ahead."
+
+Example:
+"Hey Sarah, since you're tracking Agentic AI and tool integration, check out the enterprise database MCP server released this morning. It bridges the gap between LLMs and live corporate data architectures—a massive skillset gap in enterprise software right now."
+
+Return the suggestions in the following structured JSON format:
+{{
+  "summary": "A 2-3 sentence overview of the career progression focus area based on this week's trends.",
+  "suggestions": [
+    {{
+      "title": "Short descriptive title (e.g. 'Adopt local model quantization' or 'Explore MCP tooling')",
+      "description": "The exact 'Hey [Name], ...' template text computed for this suggestion.",
+      "action_item": "A short, actionable instruction (e.g. 'Your Growth Action: Spend 10 minutes reading their deployment markdown script to see how to implement it locally.')",
+      "impact": "High | Medium | Low",
+      "relevance": "Why this suggestion is critical based on their specific interest or bookmarks."
+    }}
+  ]
+}}
+
+Only output valid JSON. No markdown wrapper blocks.
+"""
+    else:
+        # Market growth suggestions
+        prompt = f"""You are a professional venture capitalist and AI market strategist.
+Based on the latest news, analyze the overall AI market landscape. Generate 4 strategic recommendations on how to grow the AI market, identify commercial opportunities, and upgrade workflows day-to-day.
+
+Latest AI News & Advancements:
+{json.dumps(recent_news_context, indent=2)}
+
+Return the suggestions in the following structured JSON format:
+{{
+  "summary": "A 2-3 sentence strategic analysis of current market opportunities and structural growth directions in the AI space.",
+  "suggestions": [
+    {{
+      "title": "Market upgrade / Commercial recommendation title",
+      "description": "Deep-dive analysis of how this news category can grow the AI market or how developers/enterprises can scale their products.",
+      "action_item": "Concrete business / development action item to implement this upgrade.",
+      "impact": "High | Medium | Low",
+      "relevance": "Underlying market trend or news source that validates this opportunity."
+    }}
+  ]
+}}
+
+Only output valid JSON. No markdown wrapper blocks.
+"""
+
+    try:
+        gemini = get_gemini_client()
+        response_data = await gemini.generate_json(prompt)
+    except Exception as exc:
+        logger.error("suggestions_generation_error", error=str(exc))
+        if settings.is_development:
+            logger.info("returning_mock_suggestions_in_dev")
+            if suggestion_type == "personalized":
+                response_data = {
+                    "summary": "Focus on adopting local quantization techniques and MCP servers to optimize resource usage.",
+                    "suggestions": [
+                        {
+                            "title": "Adopt local model quantization",
+                            "description": f"Hey {user_name}, since you're tracking local model inference, check out the new quantization repository today. It directly impacts your work with local model deployment because it cuts memory footprint in half. Spend 10 minutes reading their docs to stay ahead.",
+                            "action_item": "Your Growth Action: Spend 10 minutes reading their deployment markdown script to see how to implement it locally.",
+                            "impact": "High",
+                            "relevance": "Matches your preferences for LLMs and local inference."
+                        }
+                    ]
+                }
+            else:
+                response_data = {
+                    "summary": "Commercialize local inference APIs and expand model integrations.",
+                    "suggestions": [
+                        {
+                            "title": "Scale enterprise MCP connector templates",
+                            "description": "Enterprises lack ready-to-run MCP servers for secure database access. Providing plug-and-play connectors accelerates commercial adoption.",
+                            "action_item": "Concrete business action: Spin up a boilerplate PostgreSQL connector template.",
+                            "impact": "High",
+                            "relevance": "Matches recent rise in enterprise MCP news."
+                        }
+                    ]
+                }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Failed to generate suggestions from Gemini: {str(exc)}",
+            )
+
+    # Save to Redis cache (TTL: 4 hours)
+    try:
+        if redis and response_data:
+            await redis.set(cache_key, json.dumps(response_data), ttl_seconds=14400)
+    except Exception as exc:
+        logger.warning("suggestions_cache_write_error", error=str(exc))
+
+    return response_data
 
 
 # ── Serializers ───────────────────────────────────────────────────────────────

@@ -34,7 +34,7 @@ beautifulsoup4
 lxml
 
 # ── AI (Gemini) ────────────────────────────────────────────────────────────────
-google-generativeai
+google-genai
 google-auth
 
 # ── Notifications (Firebase) ───────────────────────────────────────────────────
