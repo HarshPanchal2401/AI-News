@@ -1,5 +1,69 @@
-venv/
-.env
-.venv
+# ── Python ────────────────────────────────────────────────
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+MANIFEST
+
+# ── Virtual environments ───────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+venv.bak/
+env.bak/
+
+# ── Environment / secrets ─────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── ngrok ─────────────────────────────────────────────────
+ngrok/
+*.ngrok*
+ngrok.yml
+ngrok.log
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Test / coverage ───────────────────────────────────────
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# ── Type checkers ─────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# ── IDE / Editor ──────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# ── Project-specific ──────────────────────────────────────
+credentials/
+firebase.json
+codebase_analysis.md
+
+# ── GitHub Copilot / AI agent scratch ────────────────────
+.agents/
+
+# ── Docker ────────────────────────────────────────────────
+.dockerignore
