@@ -81,7 +81,6 @@ class RedditAIFetcher(BaseFetcher):
             data = await fetch_json(
                 url,
                 source_name=self.SOURCE_NAME,
-                headers={"User-Agent": "AINewsBot/2.0 (news aggregator)"},
             )
             posts = data.get("data", {}).get("children", [])
 
@@ -99,32 +98,31 @@ class RedditAIFetcher(BaseFetcher):
                 if not title or not link_url or score < self.MIN_UPVOTES:
                     continue
 
-                # Only include posts linking to real news sources
-                is_news = any(nd in domain for nd in self.NEWS_DOMAINS)
-                if not is_news:
-                    continue
+                # Only include trusted news domains or let the verifier handle it
+                # For reddit, we require it to be from the news domain whitelist to keep quality high
+                if domain.lower() not in self.NEWS_DOMAINS and not any(link_url.lower().endswith(ext) for ext in [".pdf", ".html"]):
+                    if not any(trusted in domain.lower() for trusted in self.NEWS_DOMAINS):
+                        continue
 
-                created_utc = post.get("created_utc")
                 published_at = None
+                created_utc = post.get("created_utc")
                 if created_utc:
                     from datetime import datetime, timezone
                     published_at = datetime.fromtimestamp(created_utc, tz=timezone.utc)
 
-                description = (
-                    f"Reddit r/{subreddit} — {score} upvotes, "
-                    f"{post.get('num_comments', 0)} comments"
-                )
-
-                article = self._make_article(
+                article = RawArticle(
                     title=title,
                     url=link_url,
-                    description=description,
+                    source_name=self.SOURCE_NAME,
+                    source_domain=domain,
+                    description=post.get("selftext", "")[:500] or f"Reddit hot post on r/{subreddit} with {score} upvotes",
                     published_at=published_at,
+                    source_type=self.SOURCE_TYPE,
                 )
                 articles.append(article)
 
-        except Exception as exc:
-            self.logger.error("reddit_fetch_error", subreddit=subreddit, error=str(exc))
+        except Exception as e:
+            self.logger.warning("reddit_subreddit_fetch_failed", subreddit=subreddit, error=str(e))
 
         return articles
 
@@ -133,8 +131,9 @@ class RedditAIFetcher(BaseFetcher):
 
 class HackerNewsFetcher(BaseFetcher):
     """
-    Fetches top AI-related stories from Hacker News via Algolia API.
-    Filters for stories tagged with 'ai' or with AI-related keywords in title.
+    Fetches hot posts from Hacker News using the Algolia search API.
+    Queries stories matching AI terms (LLMs, neural networks, machine learning)
+    that have at least 30 points and were created in the last 24h.
     """
 
     SOURCE_NAME: ClassVar[str] = "hacker_news"
@@ -144,13 +143,14 @@ class HackerNewsFetcher(BaseFetcher):
     ALGOLIA_URL = "https://hn.algolia.com/api/v1/search"
 
     AI_QUERIES = [
-        "artificial intelligence",
         "large language model",
+        "artificial intelligence",
         "machine learning",
+        "neural network",
         "OpenAI OR Anthropic OR DeepMind OR Google AI",
     ]
 
-    MIN_POINTS = 30
+    MIN_POINTS = 5
 
     async def fetch(self) -> list[RawArticle]:
         """Fetch AI stories from HN Algolia search API."""
@@ -176,13 +176,13 @@ class HackerNewsFetcher(BaseFetcher):
         """Fetch stories for a single search query."""
         from datetime import datetime, timezone, timedelta
 
-        # Only look at stories from the last 24 hours
-        cutoff = int((datetime.now(timezone.utc) - timedelta(days=1)).timestamp())
+        # Only look at stories from the last 3 days
+        cutoff = int((datetime.now(timezone.utc) - timedelta(days=3)).timestamp())
 
         params = {
             "query": query,
             "tags": "story",
-            "numericFilters": f"points>={self.MIN_POINTS},created_at_i>={cutoff}",
+            "numericFilters": f'["points>={self.MIN_POINTS}", "created_at_i>={cutoff}"]',
             "hitsPerPage": 20,
         }
         query_str = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())

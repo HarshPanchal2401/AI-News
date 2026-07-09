@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Pulse — Premium AI News</title>
+  <title>AI News</title>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,6 +44,55 @@
       --accent: #4f46e5;
       --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
       --shadow-premium: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+    }
+
+    /* ── Light mode stability overrides ── */
+    html.light .article-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+    html.light .article-card:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+    html.light .section-title {
+      color: #111827;
+    }
+    html.light .bookmark-btn:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    html.light .skeleton-card {
+      background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.08) 37%, rgba(0,0,0,0.04) 63%);
+      background-size: 400% 100%;
+    }
+    html.light .source-chip {
+      color: #6b7280;
+    }
+    html.light .trust-badge {
+      background-color: rgba(16, 185, 129, 0.12);
+    }
+    html.light .drawer {
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.12);
+    }
+    html.light input {
+      background-color: #f9fafb !important;
+      color: #111827 !important;
+      border-color: rgba(0,0,0,0.12) !important;
+    }
+    html.light input:focus {
+      background-color: #ffffff !important;
+      border-color: var(--accent) !important;
+    }
+    html.light .action-btn:active {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    html.light .profile-name-input:focus, html.light .profile-name-input:hover {
+      background-color: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+    }
+    html.light .select-chip {
+      background-color: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
     * {
@@ -104,7 +153,7 @@
     .brand-logo {
       width: 28px;
       height: 28px;
-      background: var(--accent-gradient);
+      background: transparent;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -602,6 +651,12 @@
     .switch-container input:checked + .slider {
       background-color: var(--accent) !important;
     }
+    .switch-container .slider {
+      background-color: rgba(255,255,255,0.1);
+    }
+    html.light .switch-container .slider {
+      background-color: #d1d5db !important;
+    }
     .switch-container .slider:before {
       position: absolute;
       content: "";
@@ -612,9 +667,35 @@
       background-color: white;
       transition: .3s;
       border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
     }
     .switch-container input:checked + .slider:before {
       transform: translateX(20px);
+    }
+    /* Light mode score badge */
+    html.light .score-badge-auto {
+      background: rgba(0,0,0,0.07) !important;
+    }
+    /* Light mode source chip */
+    html.light .source-chip-auto {
+      border-color: rgba(0,0,0,0.12) !important;
+    }
+    html.light .source-chip-auto.non-official {
+      background: rgba(0,0,0,0.04) !important;
+      color: #6b7280 !important;
+    }
+    /* Light mode tab bar */
+    html.light .insights-tab-bar {
+      background: rgba(0,0,0,0.05) !important;
+    }
+    /* Light mode settings card bg */
+    html.light .settings-group-card {
+      background: #f9fafb !important;
+      border-color: rgba(0,0,0,0.08) !important;
+    }
+    /* Light mode separator in settings */
+    html.light .settings-separator {
+      background-color: rgba(0,0,0,0.08) !important;
     }
   </style>
 </head>
@@ -625,10 +706,10 @@
     <!-- ── Auth Screen ── -->
     <div id="auth-screen" style="display: flex; flex-direction: column; height: 100%; justify-content: center; padding: 32px; gap: 20px; z-index: 150; background-color: var(--bg-mobile); overflow-y: auto;">
       <div style="text-align: center; margin-bottom: 6px;">
-        <div style="width: 50px; height: 50px; background: var(--accent-gradient); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; margin: 0 auto 14px auto; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);">
-          <i data-lucide="zap" style="width: 24px; height: 24px;"></i>
+        <div style="width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; overflow: hidden; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);">
+          <img id="auth-logo" src="/logo.png" style="width: 100%; height: 100%; object-fit: contain;" alt="AI News Logo" />
         </div>
-        <h2 style="font-family: var(--font-header); font-weight: 700; font-size: 1.6rem; letter-spacing: -0.5px; margin-bottom: 4px;">AI Pulse</h2>
+        <h2 style="font-family: var(--font-header); font-weight: 700; font-size: 1.6rem; letter-spacing: -0.5px; margin-bottom: 4px;">AI News</h2>
         <p style="font-size: 0.8rem; color: var(--text-muted);">Premium AI Market Intelligence Feed</p>
       </div>
 
@@ -675,13 +756,77 @@
       <div id="auth-status" style="text-align: center; font-size: 0.75rem; min-height: 16px; color: var(--text-muted); margin-top: 4px;"></div>
     </div>
 
+    <!-- ── Onboarding Preferences Screen ── -->
+    <div id="onboarding-screen" style="display: none; flex-direction: column; height: 100%; justify-content: flex-start; padding: 24px; gap: 20px; z-index: 140; background-color: var(--bg-mobile); overflow-y: auto;">
+      <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+        <div style="width: 50px; height: 50px; background: var(--accent-gradient); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; margin: 0 auto 14px auto; box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);">
+          <i data-lucide="sliders" style="width: 24px; height: 24px;"></i>
+        </div>
+        <h2 style="font-family: var(--font-header); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.5px; margin-bottom: 4px;">Tailor Your Experience</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Choose your preferences to customize your AI Insights & Feed</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Section 1: News Goals -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <i data-lucide="target" style="width: 18px; height: 18px; color: var(--accent);"></i>
+            <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">1. News Goals</span>
+          </div>
+          <div id="onboarding-goals-selector" class="chip-selector" style="margin-bottom: 12px;">
+            <!-- Rendered dynamically -->
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="onboarding-custom-goal-input" placeholder="Add custom goal..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+            <button onclick="addOnboardingCustomGoal()" style="padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Add</button>
+          </div>
+        </div>
+
+        <!-- Section 2: Followed Categories -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <i data-lucide="layout" style="width: 18px; height: 18px; color: var(--accent);"></i>
+            <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">2. Followed Categories</span>
+          </div>
+          <div id="onboarding-categories-selector" class="chip-selector" style="margin-bottom: 12px;">
+            <!-- Rendered dynamically -->
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="onboarding-custom-category-input" placeholder="Add custom category..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+            <button onclick="addOnboardingCustomCategory()" style="padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Add</button>
+          </div>
+        </div>
+
+        <!-- Section 3: Followed Companies -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <i data-lucide="building-2" style="width: 18px; height: 18px; color: var(--accent);"></i>
+            <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">3. Followed Companies</span>
+          </div>
+          <div id="onboarding-companies-selector" class="chip-selector" style="margin-bottom: 12px;">
+            <!-- Rendered dynamically -->
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="onboarding-custom-company-input" placeholder="Add custom company..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+            <button onclick="addOnboardingCustomCompany()" style="padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button onclick="saveOnboardingPreferences()" style="width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--accent-gradient); color: white; font-family: var(--font-primary); font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(99,102,241,0.25); margin-top: 10px; margin-bottom: 30px;">
+        <span>Save Preferences & Enter App</span>
+        <i data-lucide="check" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
     <!-- ── Main App Container ── -->
     <div id="app-screen" style="display: none; flex-direction: column; flex: 1;">
 
       <header>
         <div class="brand">
-          <div class="brand-logo"><i data-lucide="zap" style="width: 16px; height: 16px;"></i></div>
-          <div class="brand-title">AI Pulse</div>
+          <div class="brand-logo" style="overflow: hidden; width: 32px; height: 32px; border-radius: 8px;"><img id="header-logo" src="/logo.png" style="width: 100%; height: 100%; object-fit: contain;" alt="AI News Logo" /></div>
+          <div class="brand-title">AI News</div>
         </div>
         <div class="header-actions">
           <button class="action-btn" id="theme-toggle" onclick="toggleTheme()"><i data-lucide="sun"></i></button>
@@ -748,19 +893,7 @@
       <div class="feed-container" id="articles-feed" style="display: none;"></div>
     </div>
 
-    <!-- ── Daily Brief View ── -->
-    <div class="content-area view-panel" id="view-brief">
-      <div class="section-title">Your Daily Briefing <i data-lucide="calendar" style="color: var(--accent); width: 18px; height: 18px;"></i></div>
-      <div style="margin-bottom: 20px; font-size: 0.85rem; color: var(--text-muted);" id="brief-date"></div>
-      
-      <div class="feed-container" id="brief-feed">
-        <div class="article-card" style="text-align: center; padding: 30px;">
-          <i data-lucide="coffee" style="margin: 0 auto 10px auto; width: 36px; height: 36px; color: var(--accent);"></i>
-          <div style="font-weight: 600; font-size: 1rem;">No brief generated today</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Your personalized daily brief will appear here once the pipelines execute.</div>
-        </div>
-      </div>
-    </div>
+
 
     <!-- ── Bookmarks View ── -->
     <div class="content-area view-panel" id="view-bookmarks">
@@ -779,7 +912,7 @@
       <div class="section-title">AI Insights & Career Mentor <i data-lucide="sparkles" style="color: var(--accent); width: 18px; height: 18px;"></i></div>
       
       <!-- Toggle Tabs -->
-      <div style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 8px;">
+      <div class="insights-tab-bar" style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 8px;">
         <button id="tab-suggestions-personalized" onclick="setSuggestionsTab('personalized')" style="flex: 1; padding: 10px; border: none; border-radius: 6px; background: var(--accent); color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease;">
           Career Mentor
         </button>
@@ -847,8 +980,12 @@
               </div>
             </div>
             <div id="goals-body" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 0 solid var(--border-color);">
-              <div style="padding: 16px;" id="topics-selector" class="chip-selector">
+              <div style="padding: 16px; padding-bottom: 0;" id="topics-selector" class="chip-selector">
                 <!-- All chips populated dynamically -->
+              </div>
+              <div style="padding: 0 16px 16px 16px; display: flex; gap: 8px;">
+                <input type="text" id="custom-goal-input" placeholder="Add custom goal..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+                <button onclick="addCustomGoal()" style="padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Add</button>
               </div>
             </div>
             <div id="goals-collapsed-chips" style="padding: 0 16px 16px 16px; display: flex; flex-wrap: wrap; gap: 6px;">
@@ -874,8 +1011,12 @@
               </div>
             </div>
             <div id="categories-body" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 0 solid var(--border-color);">
-              <div style="padding: 16px;" id="categories-selector" class="chip-selector">
+              <div style="padding: 16px; padding-bottom: 0;" id="categories-selector" class="chip-selector">
                 <!-- All chips populated dynamically -->
+              </div>
+              <div style="padding: 0 16px 16px 16px; display: flex; gap: 8px;">
+                <input type="text" id="custom-category-input" placeholder="Add custom category..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+                <button onclick="addCustomCategory()" style="padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Add</button>
               </div>
             </div>
             <div id="categories-collapsed-chips" style="padding: 0 16px 16px 16px; display: flex; flex-wrap: wrap; gap: 6px;">
@@ -901,8 +1042,12 @@
               </div>
             </div>
             <div id="companies-body" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; border-top: 0 solid var(--border-color);">
-              <div style="padding: 16px;" id="companies-selector" class="chip-selector">
+              <div style="padding: 16px; padding-bottom: 0;" id="companies-selector" class="chip-selector">
                 <!-- All chips populated dynamically -->
+              </div>
+              <div style="padding: 0 16px 16px 16px; display: flex; gap: 8px;">
+                <input type="text" id="custom-company-input" placeholder="Add custom company..." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+                <button onclick="addCustomCompany()" style="padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Add</button>
               </div>
             </div>
             <div id="companies-collapsed-chips" style="padding: 0 16px 16px 16px; display: flex; flex-wrap: wrap; gap: 6px;">
@@ -918,7 +1063,7 @@
           <i data-lucide="settings" style="width: 16px; height: 16px; color: var(--accent);"></i> Settings
         </div>
         
-        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 4px 0; display: flex; flex-direction: column;">
+        <div class="settings-group-card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 4px 0; display: flex; flex-direction: column;">
           
           <!-- Notifications Toggle Tile -->
           <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;">
@@ -928,7 +1073,7 @@
             </div>
             <label class="switch-container" style="position: relative; display: inline-block; width: 44px; height: 24px;">
               <input type="checkbox" id="settings-notifications" style="opacity: 0; width: 0; height: 0;" onchange="toggleNotificationPref(this.checked)">
-              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .3s; border-radius: 34px;"></span>
+              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .3s; border-radius: 34px;"></span>
             </label>
           </div>
           
@@ -940,38 +1085,30 @@
               <i data-lucide="moon" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
               <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Dark Theme Only</span>
             </div>
-            <span style="font-size: 0.8rem; color: var(--accent); font-weight: 600;">Enabled</span>
+            <label class="switch-container" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+              <input type="checkbox" id="settings-darkmode" style="opacity: 0; width: 0; height: 0;" onchange="toggleDarkmodePref(this.checked)">
+              <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .3s; border-radius: 34px;"></span>
+            </label>
           </div>
 
           <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
 
           <!-- Language -->
-          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+          <div onclick="changeLanguagePref()" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <i data-lucide="languages" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
               <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Language</span>
             </div>
             <div style="display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 0.8rem;">
-              <span>English (US)</span>
+              <span id="settings-language-label">English (US)</span>
               <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
             </div>
           </div>
 
           <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
 
-          <!-- Privacy -->
-          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <i data-lucide="shield-check" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
-              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Privacy Policy</span>
-            </div>
-            <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
-          </div>
-
-          <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
-
           <!-- About -->
-          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+          <div onclick="showAboutInfo()" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <i data-lucide="info" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
               <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">About</span>
@@ -981,13 +1118,16 @@
 
           <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
 
-          <!-- Help & Support -->
-          <div style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+          <!-- Manage News Sources Tile -->
+          <div onclick="openSourcesPanel()" style="padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <i data-lucide="help-circle" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
-              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Help & Support</span>
+              <i data-lucide="database" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+              <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">Manage News Sources</span>
             </div>
-            <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+            <div style="display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 0.8rem;">
+              <span id="sources-count-label">Loading...</span>
+              <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+            </div>
           </div>
 
           <div style="height: 1px; background-color: var(--border-color); margin: 0 16px;"></div>
@@ -1004,23 +1144,64 @@
       </div>
     </div>
 
+    <!-- ── News Sources View ── -->
+    <div class="content-area view-panel" id="view-sources" style="padding-bottom: 100px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <button onclick="switchView('profile')" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+          <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+        </button>
+        <div class="section-title" style="margin: 0;">Configure News Sources</div>
+      </div>
+      
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Enable or disable news scraping targets, RSS feeds, and official company blog channels that populate your news dashboard.</p>
+      
+      <!-- Add Source Form -->
+      <div class="article-card" style="padding: 16px; border-radius: 14px; background: var(--bg-card); border: 1px dashed var(--accent); margin-bottom: 20px;">
+        <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="plus-circle" style="color: var(--accent); width: 18px; height: 18px;"></i> Add New News Source
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input type="text" id="new-source-name" placeholder="source_name (e.g. custom_rss)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+          <input type="text" id="new-source-display" placeholder="Display Name (e.g. Custom AI)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <input type="text" id="new-source-url" placeholder="Feed/Blog URL (https://...)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+          <input type="text" id="new-source-domain" placeholder="Domain (e.g. blog.com)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: var(--text-main); font-size: 0.8rem; outline: none;">
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: 0.75rem; color: var(--text-muted); font-weight:600;">Type:</label>
+            <select id="new-source-type" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-mobile); color: var(--text-main); font-size: 0.75rem; outline: none;">
+              <option value="rss">RSS Feed</option>
+              <option value="scrape">Scraper</option>
+              <option value="api">API Endpoint</option>
+            </select>
+          </div>
+          <button onclick="createNewSource()" style="padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+            <span>Add Source</span>
+          </button>
+        </div>
+        <div id="add-source-status" style="margin-top: 8px; font-size: 0.75rem; text-align: center; color: var(--text-muted);"></div>
+      </div>
+
+      <div id="sources-list" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+
     <!-- ── Navigation ── -->
     <nav>
       <div class="nav-item active" onclick="switchView('feed')">
         <i data-lucide="layout-list"></i>
         <span>Feed</span>
       </div>
-      <div class="nav-item" onclick="switchView('brief')">
-        <i data-lucide="newspaper"></i>
-        <span>Daily Brief</span>
+      <div class="nav-item" onclick="switchView('suggestions')">
+        <i data-lucide="sparkles"></i>
+        <span>AI Insights</span>
       </div>
       <div class="nav-item" onclick="switchView('bookmarks')">
         <i data-lucide="bookmark"></i>
         <span>Bookmarks</span>
-      </div>
-      <div class="nav-item" onclick="switchView('suggestions')">
-        <i data-lucide="sparkles"></i>
-        <span>AI Insights</span>
       </div>
       <div class="nav-item" onclick="switchView('profile')">
         <i data-lucide="user"></i>
@@ -1050,16 +1231,22 @@
     let userProfile = null;
     let userPreferences = null;
     let authMode = "login";  // "login" or "register"
+    let isNewRegistration = false;
 
     // --- Authentication System Helpers ---
     function checkAuthState() {
       const token = localStorage.getItem("access_token");
       if (token) {
-        showAppScreen();
-        // Load initial data
-        loadUserProfile();
-        loadArticles();
-        renderPreferences();
+        if (isNewRegistration) {
+          showOnboardingScreen();
+        } else {
+          document.getElementById("onboarding-screen").style.display = "none";
+          showAppScreen();
+          // Load initial data
+          loadUserProfile();
+          loadArticles();
+          renderPreferences();
+        }
       } else {
         showAuthScreen();
       }
@@ -1175,6 +1362,7 @@
           localStorage.setItem("access_token", tokenData.access_token);
           localStorage.setItem("refresh_token", tokenData.refresh_token);
 
+          isNewRegistration = true;
           status.textContent = "✓ Welcome!";
           setTimeout(() => {
             submitBtn.disabled = false;
@@ -1192,6 +1380,9 @@
     function handleLogout() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      userProfile = null;
+      userPreferences = null;
+      savedBookmarks = new Set();
       showAuthScreen();
     }
 
@@ -1232,12 +1423,16 @@
 
     // --- Init ---
     document.addEventListener("DOMContentLoaded", async () => {
-      // Set date
-      const options = { weekday: 'long', month: 'long', day: 'numeric' };
-      document.getElementById("brief-date").innerText = new Date().toLocaleDateString("en-US", options);
-      
       // Initialize icons
       lucide.createIcons();
+
+      // Apply correct logo for initial theme
+      const savedTheme = localStorage.getItem("theme") || "dark";
+      const logoSrc = savedTheme === "light" ? "/logo_light.png" : "/logo.png";
+      const hLogo = document.getElementById("header-logo");
+      const aLogo = document.getElementById("auth-logo");
+      if (hLogo) hLogo.src = logoSrc;
+      if (aLogo) aLogo.src = logoSrc;
       
       // Check auth and load app/data accordingly
       checkAuthState();
@@ -1250,7 +1445,7 @@
       
       const activeNav = Array.from(document.querySelectorAll('.nav-item')).find(item => {
         const text = item.querySelector('span').innerText.toLowerCase();
-        return text === (viewName === 'feed' ? 'feed' : viewName === 'brief' ? 'daily brief' : viewName === 'suggestions' ? 'ai insights' : viewName);
+        return text === (viewName === 'feed' ? 'feed' : viewName === 'suggestions' ? 'ai insights' : viewName);
       });
       if (activeNav) activeNav.classList.add('active');
       
@@ -1259,8 +1454,6 @@
       
       if (viewName === 'bookmarks') {
         renderBookmarks();
-      } else if (viewName === 'brief') {
-        loadDailyBrief();
       } else if (viewName === 'suggestions') {
         loadSuggestionsUI();
       }
@@ -1270,17 +1463,140 @@
     function toggleTheme() {
       const html = document.documentElement;
       const themeBtn = document.getElementById("theme-toggle");
+      const darkToggle = document.getElementById("settings-darkmode");
       
       if (html.classList.contains("dark")) {
         html.classList.remove("dark");
         html.classList.add("light");
         themeBtn.innerHTML = '<i data-lucide="moon"></i>';
+        localStorage.setItem("theme", "light");
+        if (darkToggle) darkToggle.checked = false;
+        // Switch to light logo
+        const hLogo = document.getElementById("header-logo");
+        const aLogo = document.getElementById("auth-logo");
+        if (hLogo) hLogo.src = "/logo_light.png";
+        if (aLogo) aLogo.src = "/logo_light.png";
       } else {
         html.classList.remove("light");
         html.classList.add("dark");
         themeBtn.innerHTML = '<i data-lucide="sun"></i>';
+        localStorage.setItem("theme", "dark");
+        if (darkToggle) darkToggle.checked = true;
+        // Switch to dark logo
+        const hLogo = document.getElementById("header-logo");
+        const aLogo = document.getElementById("auth-logo");
+        if (hLogo) hLogo.src = "/logo.png";
+        if (aLogo) aLogo.src = "/logo.png";
       }
       lucide.createIcons();
+    }
+
+    // --- Interactive Settings Handlers ---
+    function toggleNotificationPref(checked) {
+      if (checked) {
+        if (!("Notification" in window)) {
+          alert("This browser does not support system notifications.");
+          document.getElementById("settings-notifications").checked = false;
+          return;
+        }
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            localStorage.setItem("settings-notifications", "true");
+          } else {
+            document.getElementById("settings-notifications").checked = false;
+            localStorage.setItem("settings-notifications", "false");
+          }
+        });
+      } else {
+        localStorage.setItem("settings-notifications", "false");
+      }
+    }
+
+    function toggleDarkmodePref(checked) {
+      const html = document.documentElement;
+      const themeBtn = document.getElementById("theme-toggle");
+      
+      if (checked) {
+        html.classList.remove("light");
+        html.classList.add("dark");
+        if (themeBtn) themeBtn.innerHTML = '<i data-lucide="sun"></i>';
+        localStorage.setItem("theme", "dark");
+      } else {
+        html.classList.remove("dark");
+        html.classList.add("light");
+        if (themeBtn) themeBtn.innerHTML = '<i data-lucide="moon"></i>';
+        localStorage.setItem("theme", "light");
+      }
+      lucide.createIcons();
+    }
+
+    // --- Custom Modal Handlers for Settings ---
+    function openSettingsModal(title, bodyHtml) {
+      document.getElementById("settings-modal-title").innerText = title;
+      document.getElementById("settings-modal-body").innerHTML = bodyHtml;
+      document.getElementById("settings-custom-modal").style.display = "flex";
+      lucide.createIcons();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("settings-custom-modal").style.display = "none";
+    }
+
+    function changeLanguagePref() {
+      const currentLang = localStorage.getItem("settings-lang") || "en";
+      
+      const bodyHtml = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: var(--text-muted);">Choose your preferred interface language:</p>
+          
+          <button onclick="selectSettingsLanguage('en')" style="padding:12px; border-radius:12px; border:1.5px solid ${currentLang === 'en' ? 'var(--accent)' : 'rgba(255,255,255,0.08)'}; background:${currentLang === 'en' ? 'rgba(99,102,241,0.08)' : 'transparent'}; color:#fff; text-align:left; font-weight:600; cursor:pointer; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center; outline:none; transition:all 0.2s;">
+            English (US)
+            ${currentLang === 'en' ? '<i data-lucide="check" style="width:16px;height:16px;color:var(--accent);"></i>' : ''}
+          </button>
+          
+          <button onclick="selectSettingsLanguage('hi')" style="padding:12px; border-radius:12px; border:1.5px solid ${currentLang === 'hi' ? 'var(--accent)' : 'rgba(255,255,255,0.08)'}; background:${currentLang === 'hi' ? 'rgba(99,102,241,0.08)' : 'transparent'}; color:#fff; text-align:left; font-weight:600; cursor:pointer; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center; outline:none; transition:all 0.2s;">
+            Hindi (हिन्दी)
+            ${currentLang === 'hi' ? '<i data-lucide="check" style="width:16px;height:16px;color:var(--accent);"></i>' : ''}
+          </button>
+          
+          <button onclick="selectSettingsLanguage('gu')" style="padding:12px; border-radius:12px; border:1.5px solid ${currentLang === 'gu' ? 'var(--accent)' : 'rgba(255,255,255,0.08)'}; background:${currentLang === 'gu' ? 'rgba(99,102,241,0.08)' : 'transparent'}; color:#fff; text-align:left; font-weight:600; cursor:pointer; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center; outline:none; transition:all 0.2s;">
+            Gujarati (ગુજરાતી)
+            ${currentLang === 'gu' ? '<i data-lucide="check" style="width:16px;height:16px;color:var(--accent);"></i>' : ''}
+          </button>
+        </div>
+      `;
+      openSettingsModal("Select Language", bodyHtml);
+    }
+
+    function selectSettingsLanguage(lang) {
+      let display = "English (US)";
+      if (lang === "hi") display = "Hindi (हिन्दी)";
+      if (lang === "gu") display = "Gujarati (ગુજરાતી)";
+      
+      const label = document.getElementById("settings-language-label");
+      if (label) label.innerText = display;
+      
+      localStorage.setItem("settings-lang", lang);
+      closeSettingsModal();
+    }
+
+    function showAboutInfo() {
+      const bodyHtml = `
+        <div style="display:flex; flex-direction:column; gap:16px; text-align:center; align-items:center;">
+          <div style="width:54px; height:54px; border-radius:14px; background:var(--accent-gradient); display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(99,102,241,0.25);">
+            <i data-lucide="zap" style="width:24px; height:24px; color:#fff;"></i>
+          </div>
+          <div>
+            <h4 style="margin:4px 0; color:#fff; font-size:1.05rem; font-weight:700;">AI News</h4>
+            <span style="font-size:0.75rem; color:var(--accent); background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.15); padding:2px 8px; border-radius:6px; font-weight:600;">v2.4.0-release</span>
+          </div>
+          <p style="margin:4px 0; font-size:0.82rem; line-height:1.6; color:var(--text-muted); text-align:center; padding: 0 10px;">
+            AI News aggregates and analyzes state-of-the-art developments in machine learning, LLMs, and agentic AI systems. Powered by intelligent background ingestion and semantic synthesis.
+          </p>
+          <button onclick="closeSettingsModal()" style="width:100%; padding:11px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:10px; color:#fff; font-weight:600; cursor:pointer; margin-top:8px; outline:none; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">Dismiss</button>
+        </div>
+      `;
+      openSettingsModal("About AI News", bodyHtml);
     }
 
     // --- Data Loaders ---
@@ -1301,6 +1617,41 @@
             if (userPreferences.bookmarked_articles) {
               savedBookmarks = new Set(userPreferences.bookmarked_articles);
             }
+          }
+          // Update preferences display and email
+          renderPreferences();
+
+          // Initialize Settings UI from storage
+          try {
+            const notifCheckbox = document.getElementById("settings-notifications");
+            if (notifCheckbox) {
+              notifCheckbox.checked = localStorage.getItem("settings-notifications") === "true";
+            }
+            const darkmodeCheckbox = document.getElementById("settings-darkmode");
+            if (darkmodeCheckbox) {
+              darkmodeCheckbox.checked = !document.documentElement.classList.contains("light");
+            }
+            const savedLang = localStorage.getItem("settings-lang") || "en";
+            let langDisplay = "English (US)";
+            if (savedLang === "hi") langDisplay = "Hindi (हिन्दी)";
+            if (savedLang === "gu") langDisplay = "Gujarati (ગુજરાતી)";
+            const langLabel = document.getElementById("settings-language-label");
+            if (langLabel) {
+              langLabel.innerText = langDisplay;
+            }
+          } catch (e) {
+            console.error("Error initializing settings state:", e);
+          }
+
+          // Fetch news sources count
+          try {
+            const sourcesRes = await authenticatedFetch('/api/v1/news/sources');
+            if (sourcesRes.ok) {
+              const sourcesList = await sourcesRes.json();
+              document.getElementById("sources-count-label").innerText = `${sourcesList.filter(s => s.is_active).length}/${sourcesList.length} Active`;
+            }
+          } catch (e) {
+            console.error("Error loading sources count:", e);
           }
         }
       } catch (err) {
@@ -1474,40 +1825,116 @@
       feed.appendChild(wrapper);
     }
 
-    function appendArticleCards(articlesList, startIdx) {
-      const feed = document.getElementById('live-news-feed');
-
+    // Unified Card Renderer
+    function renderSingleCard(article, globalIdx) {
       const SOURCE_LABELS = {
         'openai_blog': 'OpenAI', 'google_ai_blog': 'Google AI', 'deepmind_blog': 'DeepMind',
         'anthropic_news': 'Anthropic', 'microsoft_ai_blog': 'Microsoft AI', 'meta_ai_blog': 'Meta AI',
         'nvidia_ai_blog': 'NVIDIA', 'huggingface_blog': 'Hugging Face', 'techcrunch_ai': 'TechCrunch',
         'venturebeat_ai': 'VentureBeat', 'mit_tech_review': 'MIT Tech', 'google_news_ai': 'Google News',
-        'arxiv': 'ArXiv', 'github_trending_ai': 'GitHub', 'producthunt_ai': 'Product Hunt',
+        'arxiv': 'ArXiv', 'arxiv_ai': 'ArXiv', 'github_trending_ai': 'GitHub', 'producthunt_ai': 'Product Hunt',
         'mistral_news': 'Mistral AI', 'xai_news': 'xAI', 'perplexity_blog': 'Perplexity',
-        'reuters_technology': 'Reuters'
+        'reuters_technology': 'Reuters', 'github_releases_ai': 'GitHub Releases'
       };
+
+      const sourceName = article.source || article.source_name || (article.source_domain ? article.source_domain.split('.')[0] : 'AI News');
+      const sourceLabel = SOURCE_LABELS[sourceName] || article.source_domain || sourceName;
+      const isOfficial = article.is_official || ['openai_blog', 'google_ai_blog', 'deepmind_blog', 'huggingface_blog'].includes(sourceName);
+      
+      const score = article.importance_score || article.final_score || article.trust_score || 0;
+      const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+
+      const date = article.published_at
+        ? new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : 'Recently';
+
+      const desc = article.description
+        ? article.description.replace(/<[^>]*>/g, '').substring(0, 110) + '…'
+        : '';
+
+      const isBookmarked = savedBookmarks.has(article.id);
+
+      const isLight = document.documentElement.classList.contains('light');
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span class="source-chip-auto ${isOfficial ? '' : 'non-official'}" style="
+              background: ${isOfficial ? 'rgba(99,102,241,0.15)' : (isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)')};
+              color: ${isOfficial ? '#818cf8' : 'var(--text-muted)'};
+              border: 1px solid ${isOfficial ? 'rgba(99,102,241,0.3)' : (isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)')};
+              font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+            ">${isOfficial ? '⚡ ' : ''}${sourceLabel}</span>
+            ${globalIdx === 0 ? '<span style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:20px;">🔥 Top Pick</span>' : ''}
+          </div>
+          <span class="score-badge-auto" style="
+            background: ${isLight ? 'rgba(0,0,0,0.07)' : 'rgba(0,0,0,0.2)'}; color: ${scoreColor};
+            font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 8px;
+            white-space: nowrap;
+          ">★ ${Math.round(score)}</span>
+        </div>
+        <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${article.title}</div>
+        ${desc ? `<div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px;">${desc}</div>` : ''}
+        <div style="font-size: 0.72rem; color: var(--text-muted); display:flex; align-items:center; gap:4px; width:100%;">
+          <i data-lucide="clock" style="width:11px;height:11px;"></i> ${date}
+          <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+            <button onclick="toggleBookmarkFromFeed(event, '${article.id}')" id="feed-bookmark-${article.id}" style="background:transparent; border:none; color:${isBookmarked ? 'var(--accent)' : 'var(--text-muted)'}; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:2px;">
+              <i data-lucide="bookmark" class="${isBookmarked ? 'bookmark-active' : ''}" style="width:15px; height:15px; fill:${isBookmarked ? 'var(--accent)' : 'none'};"></i>
+            </button>
+            <span style="color:var(--accent); font-weight:600;">Tap to read →</span>
+          </div>
+        </div>
+      `;
+    }
+
+    async function toggleBookmarkFromFeed(event, articleId) {
+      event.stopPropagation();
+      
+      const btn = document.getElementById(`feed-bookmark-${articleId}`);
+      const btnDetail = document.getElementById("bookmark-btn-detail");
+      
+      if (savedBookmarks.has(articleId)) {
+        savedBookmarks.delete(articleId);
+        if (btn) {
+          btn.style.color = "var(--text-muted)";
+          const icon = btn.querySelector("svg");
+          if (icon) {
+            icon.style.fill = "none";
+            icon.classList.remove("bookmark-active");
+          }
+        }
+        if (btnDetail) btnDetail.classList.remove("active");
+      } else {
+        savedBookmarks.add(articleId);
+        if (btn) {
+          btn.style.color = "var(--accent)";
+          const icon = btn.querySelector("svg");
+          if (icon) {
+            icon.style.fill = "var(--accent)";
+            icon.classList.add("bookmark-active");
+          }
+        }
+        if (btnDetail) btnDetail.classList.add("active");
+      }
+      
+      // Update bookmark view if active
+      if (document.getElementById("view-bookmarks").classList.contains("active")) {
+        renderBookmarks();
+      }
+      await savePreferences();
+    }
+
+    function appendArticleCards(articlesList, startIdx) {
+      const feed = document.getElementById('live-news-feed');
 
       articlesList.forEach((article, i) => {
         const globalIdx = startIdx + i;
-        const sourceLabel = SOURCE_LABELS[article.source] || article.source;
-        const isOfficial = article.is_official;
-        const score = article.importance_score || 0;
-        const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
         const isOlderBatch = startIdx >= LIVE_PAGE;
-
-        const date = article.published_at
-          ? new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-          : 'Recently';
-
-        const desc = article.description
-          ? article.description.replace(/<[^>]*>/g, '').substring(0, 110) + '…'
-          : '';
 
         const card = document.createElement('div');
         card.className = 'article-card';
         card.style.cursor = 'pointer';
-        // Slightly subdued opacity for older batch
         if (isOlderBatch) card.style.opacity = '0.88';
+        
         card.onclick = () => {
           if (article.id && !articles.find(a => a.id === article.id)) {
             articles.push(article);
@@ -1515,30 +1942,7 @@
           openArticle(article.id);
         };
 
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-              <span style="
-                background: ${isOfficial ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.06)'};
-                color: ${isOfficial ? '#818cf8' : 'var(--text-muted)'};
-                border: 1px solid ${isOfficial ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.1)'};
-                font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 20px;
-              ">${isOfficial ? '⚡ ' : ''}${sourceLabel}</span>
-              ${globalIdx === 0 ? '<span style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);font-size:0.7rem;font-weight:600;padding:2px 8px;border-radius:20px;">🔥 Top Pick</span>' : ''}
-            </div>
-            <span style="
-              background: rgba(0,0,0,0.2); color: ${scoreColor};
-              font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 8px;
-              white-space: nowrap;
-            ">★ ${Math.round(score)}</span>
-          </div>
-          <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${article.title}</div>
-          ${desc ? `<div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px;">${desc}</div>` : ''}
-          <div style="font-size: 0.72rem; color: var(--text-muted); display:flex; align-items:center; gap:4px;">
-            <i data-lucide="clock" style="width:11px;height:11px;"></i> ${date}
-            <span style="margin-left:auto; color:var(--accent); font-weight:600;">Tap to read →</span>
-          </div>
-        `;
+        card.innerHTML = renderSingleCard(article, globalIdx);
         feed.appendChild(card);
       });
     }
@@ -1924,8 +2328,6 @@
       }
     }
 
-
-
     // --- Renderers ---
     function renderFeed() {
       const container = document.getElementById("articles-feed");
@@ -1942,24 +2344,15 @@
         return;
       }
 
-      articles.forEach(art => {
-        const score = art.final_score || art.trust_score || 0;
-        const scoreColor = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#9ca3af';
+      articles.forEach((art, idx) => {
         const card = document.createElement("div");
         card.className = "article-card";
         card.style.cursor = 'pointer';
-        card.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);"><i data-lucide="globe" style="width:12px; height:12px; display:inline;"></i> ${art.source_domain || 'AI News'}</span>
-            </div>
-            <span style="background:rgba(0,0,0,0.2); color:${scoreColor}; font-size:0.68rem; font-weight:700; padding:2px 7px; border-radius:8px;">★ ${Math.round(score)}</span>
-          </div>
-          <div style="font-weight: 600; font-size: 0.9rem; line-height: 1.4; margin-bottom: 6px; color: var(--text-main);">${art.title}</div>
-          <div style="font-size: 0.72rem; color: var(--accent); font-weight: 600;">Tap to read →</div>
-        `;
-        card.onclick = () => {
-          openArticle(art.id);
+        card.innerHTML = renderSingleCard(art, idx);
+        card.onclick = (e) => {
+          if (!e.target.closest('button')) {
+            openArticle(art.id);
+          }
         };
         container.appendChild(card);
       });
@@ -2059,7 +2452,8 @@
       const activeTopics = userPreferences?.favorite_topics || [];
       if (topicSelector) {
         topicSelector.innerHTML = "";
-        availableTopics.forEach(topic => {
+        const allTopics = Array.from(new Set([...availableTopics, ...activeTopics]));
+        allTopics.forEach(topic => {
           const activeClass = activeTopics.includes(topic) ? "active" : "";
           const chip = document.createElement("div");
           chip.className = `select-chip ${activeClass}`;
@@ -2077,7 +2471,8 @@
       const activeCats = userPreferences?.favorite_categories || [];
       if (catSelector) {
         catSelector.innerHTML = "";
-        availableCategories.forEach(cat => {
+        const allCats = Array.from(new Set([...availableCategories, ...activeCats]));
+        allCats.forEach(cat => {
           const activeClass = activeCats.includes(cat) ? "active" : "";
           const chip = document.createElement("div");
           chip.className = `select-chip ${activeClass}`;
@@ -2095,7 +2490,8 @@
       const activeComps = userPreferences?.favorite_companies || [];
       if (compSelector) {
         compSelector.innerHTML = "";
-        availableCompanies.forEach(comp => {
+        const allComps = Array.from(new Set([...availableCompanies, ...activeComps]));
+        allComps.forEach(comp => {
           const activeClass = activeComps.includes(comp) ? "active" : "";
           const chip = document.createElement("div");
           chip.className = `select-chip ${activeClass}`;
@@ -2184,6 +2580,225 @@
       }
     }
 
+    // --- Custom profile preference tag helpers ---
+    async function addCustomGoal() {
+      const input = document.getElementById("custom-goal-input");
+      const val = input.value.trim();
+      if (!val) return;
+      if (!userPreferences) return;
+      let topics = [...(userPreferences.favorite_topics || [])];
+      if (!topics.includes(val)) {
+        topics.push(val);
+        userPreferences.favorite_topics = topics;
+        await savePreferences();
+        renderPreferences();
+        const body = document.getElementById("goals-body");
+        if (body && accordionStates.goals) {
+          body.style.maxHeight = body.scrollHeight + "px";
+        }
+      }
+      input.value = "";
+    }
+
+    async function addCustomCategory() {
+      const input = document.getElementById("custom-category-input");
+      const val = input.value.trim();
+      if (!val) return;
+      if (!userPreferences) return;
+      let cats = [...(userPreferences.favorite_categories || [])];
+      if (!cats.includes(val)) {
+        cats.push(val);
+        userPreferences.favorite_categories = cats;
+        await savePreferences();
+        renderPreferences();
+        const body = document.getElementById("categories-body");
+        if (body && accordionStates.categories) {
+          body.style.maxHeight = body.scrollHeight + "px";
+        }
+      }
+      input.value = "";
+    }
+
+    async function addCustomCompany() {
+      const input = document.getElementById("custom-company-input");
+      const val = input.value.trim();
+      if (!val) return;
+      if (!userPreferences) return;
+      let comps = [...(userPreferences.favorite_companies || [])];
+      if (!comps.includes(val)) {
+        comps.push(val);
+        userPreferences.favorite_companies = comps;
+        await savePreferences();
+        renderPreferences();
+        const body = document.getElementById("companies-body");
+        if (body && accordionStates.companies) {
+          body.style.maxHeight = body.scrollHeight + "px";
+        }
+      }
+      input.value = "";
+    }
+
+    // --- Onboarding Screen Logic ---
+    let onboardingPreferences = {
+      favorite_topics: [],
+      favorite_categories: [],
+      favorite_companies: []
+    };
+    let onboardingCustomTopics = [];
+    let onboardingCustomCategories = [];
+    let onboardingCustomCompanies = [];
+
+    function showOnboardingScreen() {
+      document.getElementById("auth-screen").style.display = "none";
+      document.getElementById("app-screen").style.display = "none";
+      document.getElementById("onboarding-screen").style.display = "flex";
+      renderOnboardingSelectors();
+    }
+
+    function renderOnboardingSelectors() {
+      // Goals (Topics)
+      const topicSelector = document.getElementById("onboarding-goals-selector");
+      if (topicSelector) {
+        topicSelector.innerHTML = "";
+        const allTopics = Array.from(new Set([...availableTopics, ...onboardingCustomTopics]));
+        allTopics.forEach(topic => {
+          const activeClass = onboardingPreferences.favorite_topics.includes(topic) ? "active" : "";
+          const chip = document.createElement("div");
+          chip.className = `select-chip ${activeClass}`;
+          chip.innerText = topic;
+          chip.onclick = () => toggleOnboardingTopic(topic);
+          topicSelector.appendChild(chip);
+        });
+      }
+
+      // Categories
+      const catSelector = document.getElementById("onboarding-categories-selector");
+      if (catSelector) {
+        catSelector.innerHTML = "";
+        const allCats = Array.from(new Set([...availableCategories, ...onboardingCustomCategories]));
+        allCats.forEach(cat => {
+          const activeClass = onboardingPreferences.favorite_categories.includes(cat) ? "active" : "";
+          const chip = document.createElement("div");
+          chip.className = `select-chip ${activeClass}`;
+          chip.innerText = cat;
+          chip.onclick = () => toggleOnboardingCategory(cat);
+          catSelector.appendChild(chip);
+        });
+      }
+
+      // Companies
+      const compSelector = document.getElementById("onboarding-companies-selector");
+      if (compSelector) {
+        compSelector.innerHTML = "";
+        const allComps = Array.from(new Set([...availableCompanies, ...onboardingCustomCompanies]));
+        allComps.forEach(comp => {
+          const activeClass = onboardingPreferences.favorite_companies.includes(comp) ? "active" : "";
+          const chip = document.createElement("div");
+          chip.className = `select-chip ${activeClass}`;
+          chip.innerText = comp;
+          chip.onclick = () => toggleOnboardingCompany(comp);
+          compSelector.appendChild(chip);
+        });
+      }
+      lucide.createIcons();
+    }
+
+    function toggleOnboardingTopic(topic) {
+      let list = onboardingPreferences.favorite_topics;
+      if (list.includes(topic)) {
+        onboardingPreferences.favorite_topics = list.filter(t => t !== topic);
+      } else {
+        onboardingPreferences.favorite_topics.push(topic);
+      }
+      renderOnboardingSelectors();
+    }
+
+    function toggleOnboardingCategory(cat) {
+      let list = onboardingPreferences.favorite_categories;
+      if (list.includes(cat)) {
+        onboardingPreferences.favorite_categories = list.filter(c => c !== cat);
+      } else {
+        onboardingPreferences.favorite_categories.push(cat);
+      }
+      renderOnboardingSelectors();
+    }
+
+    function toggleOnboardingCompany(comp) {
+      let list = onboardingPreferences.favorite_companies;
+      if (list.includes(comp)) {
+        onboardingPreferences.favorite_companies = list.filter(c => c !== comp);
+      } else {
+        onboardingPreferences.favorite_companies.push(comp);
+      }
+      renderOnboardingSelectors();
+    }
+
+    function addOnboardingCustomGoal() {
+      const input = document.getElementById("onboarding-custom-goal-input");
+      const val = input.value.trim();
+      if (!val) return;
+      if (!onboardingCustomTopics.includes(val)) {
+        onboardingCustomTopics.push(val);
+      }
+      if (!onboardingPreferences.favorite_topics.includes(val)) {
+        onboardingPreferences.favorite_topics.push(val);
+      }
+      input.value = "";
+      renderOnboardingSelectors();
+    }
+
+    function addOnboardingCustomCategory() {
+      const input = document.getElementById("onboarding-custom-category-input");
+      const val = input.value.trim();
+      if (!val) return;
+      if (!onboardingCustomCategories.includes(val)) {
+        onboardingCustomCategories.push(val);
+      }
+      if (!onboardingPreferences.favorite_categories.includes(val)) {
+        onboardingPreferences.favorite_categories.push(val);
+      }
+      input.value = "";
+      renderOnboardingSelectors();
+    }
+
+    function addOnboardingCustomCompany() {
+      const input = document.getElementById("onboarding-custom-company-input");
+      const val = input.value.trim();
+      if (!val) return;
+      if (!onboardingCustomCompanies.includes(val)) {
+        onboardingCustomCompanies.push(val);
+      }
+      if (!onboardingPreferences.favorite_companies.includes(val)) {
+        onboardingPreferences.favorite_companies.push(val);
+      }
+      input.value = "";
+      renderOnboardingSelectors();
+    }
+
+    async function saveOnboardingPreferences() {
+      try {
+        const res = await authenticatedFetch('/api/v1/preferences', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            favorite_categories: onboardingPreferences.favorite_categories,
+            favorite_companies: onboardingPreferences.favorite_companies,
+            favorite_topics: onboardingPreferences.favorite_topics,
+            blocked_topics: [],
+            bookmarked_articles: []
+          })
+        });
+        if (res.ok) {
+          document.getElementById("onboarding-screen").style.display = "none";
+          isNewRegistration = false;
+          // Reload the main app
+          checkAuthState();
+        }
+      } catch (err) {
+        console.error("Error saving onboarding preferences:", err);
+      }
+    }
+
     async function toggleBookmark(event, articleId) {
       if (event) event.stopPropagation();
       const btn = document.getElementById(`bookmark-btn-detail`);
@@ -2262,18 +2877,32 @@
       }
     }
 
-    // Translation simulation
-    function translateSummaryUI(originalText, targetLang) {
+    // Real Translation Fetcher
+    async function translateSummaryUI(articleId, targetLang, originalText) {
       const summaryTextEl = document.getElementById("ai-summary-text-box");
       if (!summaryTextEl) return;
-      
-      const translations = {
-        es: "Resumen Ejecutivo de IA: Este artículo detalla los últimos avances en inteligencia artificial, analizando las métricas clave y las tecnologías presentadas en el evento del sector. Las implicaciones competitivas sugieren un cambio de paradigma para desarrolladores y startups.",
-        fr: "Résumé Exécutif de l'IA: Cet article détaille les dernières avancées en matière d'intelligence artificielle, en analysant las mesures clés et les technologies présentées lors de l'événement de l'industrie. Les implications concurrentielles suggèrent un changement de paradigme pour les développeurs et les startups.",
-        de: "KI-Executive Summary: Dieser Artikel beschreibt die neuesten Fortschritte im Bereich der künstlichen Intelligenz und analysiert die wichtigsten Metriken und Technologien, die auf dem Branchenevent vorgestellt wurden. Die wettbewerbsrechtlichen Auswirkungen deuten auf einen Paradigmenwechsel für Entwickler und Startups hin."
-      };
-      
-      summaryTextEl.innerText = translations[targetLang] || originalText;
+
+      if (targetLang === 'en') {
+        summaryTextEl.innerText = originalText;
+        return;
+      }
+
+      summaryTextEl.innerText = "Translating summary...";
+
+      try {
+        const res = await authenticatedFetch(`/api/v1/news/${articleId}/translate-summary?language=${targetLang}`, {
+          method: 'POST'
+        });
+        if (!res.ok) throw new Error("Translation failed");
+        const data = await res.json();
+        summaryTextEl.innerText = data.text || originalText;
+      } catch (err) {
+        console.error("Translation error:", err);
+        summaryTextEl.innerText = "⚠️ Translation error: " + err.message;
+        setTimeout(() => {
+          summaryTextEl.innerText = originalText;
+        }, 3000);
+      }
     }
 
     // --- Drawer Control ---
@@ -2382,7 +3011,7 @@
           const detail = await res.json();
           if (detail.analysis && detail.analysis.model_used !== "live-fetcher") {
             // Already has AI summary, display it immediately
-            displayAiSummaryCard(detail.analysis, detail.title, detail.url);
+            displayAiSummaryCard(detail.analysis, detail.title, detail.url, articleId);
           } else {
             // Not generated yet — trigger automatic generation!
             generateAiSummary(articleId);
@@ -2410,7 +3039,7 @@
         if (loadingSec) loadingSec.style.display = "none";
         
         if (detail.analysis) {
-          displayAiSummaryCard(detail.analysis, detail.title, detail.url);
+          displayAiSummaryCard(detail.analysis, detail.title, detail.url, articleId);
         }
       } catch (err) {
         console.error("Error generating AI summary:", err);
@@ -2421,7 +3050,7 @@
       lucide.createIcons();
     }
 
-    function displayAiSummaryCard(analysis, title, url) {
+    function displayAiSummaryCard(analysis, title, url, articleId) {
       const container = document.getElementById("ai-summary-card-container");
       const generateSec = document.getElementById("ai-generate-section");
       if (generateSec) generateSec.style.display = "none";
@@ -2459,9 +3088,9 @@
           <!-- Translate Actions -->
           <div style="margin-bottom:16px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; border-top:1px solid var(--border-color); padding-top:12px;">
             <span style="font-size:0.75rem; color:var(--text-muted);"><i data-lucide="languages" style="width:12px;height:12px;display:inline;"></i> Translate:</span>
-            <button onclick="translateSummaryUI('${(analysis.summary || '').replace(/'/g, "\\'")}', 'es')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Español</button>
-            <button onclick="translateSummaryUI('${(analysis.summary || '').replace(/'/g, "\\'")}', 'fr')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Français</button>
-            <button onclick="translateSummaryUI('${(analysis.summary || '').replace(/'/g, "\\'")}', 'de')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Deutsch</button>
+            <button onclick="translateSummaryUI('${articleId}', 'en', '${(analysis.summary || '').replace(/'/g, "\\'")}')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">English</button>
+            <button onclick="translateSummaryUI('${articleId}', 'hi', '${(analysis.summary || '').replace(/'/g, "\\'")}')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Hindi (हिन्दी)</button>
+            <button onclick="translateSummaryUI('${articleId}', 'gu', '${(analysis.summary || '').replace(/'/g, "\\'")}')" style="font-size:0.72rem; border:1px solid var(--border-color); background:transparent; padding:3px 8px; border-radius:6px; color:var(--text-muted); cursor:pointer;">Gujarati (ગુજરાતી)</button>
           </div>
 
           <!-- Key Takeaways -->
@@ -2640,6 +3269,283 @@
         isSpeaking = false;
       }
     }
+
+    // --- News Sources Panel Helpers ---
+    function openSourcesPanel() {
+      switchView('sources');
+      loadNewsSources();
+    }
+
+    async function loadNewsSources() {
+      const container = document.getElementById("sources-list");
+      if (!container) return;
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+          <div class="pulse-loader" style="width: 40px; height: 40px; background: var(--accent-gradient); border-radius: 50%; margin: 0 auto 15px auto; animation: pulse 1.5s infinite ease-in-out;"></div>
+          <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">Retrieving news pipeline sources...</div>
+        </div>
+      `;
+
+      try {
+        const res = await authenticatedFetch('/api/v1/news/sources');
+        if (!res.ok) throw new Error("Failed to load sources");
+        const sources = await res.json();
+        
+        // Update profile tile count too
+        document.getElementById("sources-count-label").innerText = `${sources.filter(s => s.is_active).length}/${sources.length} Active`;
+
+        container.innerHTML = "";
+        container.innerHTML = "";
+        sources.forEach(source => {
+          const card = document.createElement("div");
+          const isLightMode = document.documentElement.classList.contains('light');
+          card.style.cssText = `padding: 12px 16px; display: flex !important; flex-direction: row !important; align-items: center; border-radius: 16px; background: ${isLightMode ? 'rgba(255,255,255,0.95)' : 'rgba(17,19,28,0.45)'}; backdrop-filter: blur(10px); border: 1px solid ${isLightMode ? 'rgba(0,0,0,0.08)' : 'rgba(99,102,241,0.15)'}; margin-bottom: 12px; gap: 16px; box-shadow: ${isLightMode ? '0 2px 12px rgba(0,0,0,0.06)' : '0 4px 20px rgba(0,0,0,0.2)'}; cursor: default; width: 100%; box-sizing: border-box;`;
+          
+          const emoji = getSourceEmoji(source.name);
+          const typeBadgeColor = source.source_type === 'rss' ? '#10b981' : source.source_type === 'scrape' ? '#a855f7' : '#f59e0b';
+          const typeBadgeBg = source.source_type === 'rss' ? 'rgba(16,185,129,0.1)' : source.source_type === 'scrape' ? 'rgba(168,85,247,0.1)' : 'rgba(245,158,11,0.1)';
+          const typeIcon = source.source_type === 'rss' ? 'rss' : source.source_type === 'scrape' ? 'code-2' : 'database';
+
+          card.innerHTML = `
+            <!-- Left Icon Box -->
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);">
+              ${emoji}
+            </div>
+            
+            <!-- Center Details -->
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-weight: 700; font-size: 1.05rem; color: ${isLightMode ? '#111827' : '#ffffff'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">
+                  ${source.display_name}
+                </span>
+                <span style="background: ${typeBadgeBg}; color: ${typeBadgeColor}; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(${source.source_type === 'rss' ? '16,185,129' : source.source_type === 'scrape' ? '168,85,247' : '245,158,11'}, 0.2);">
+                  ${source.source_type} <i data-lucide="${typeIcon}" style="width: 10px; height: 10px;"></i>
+                </span>
+              </div>
+              
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: ${isLightMode ? '#6b7280' : '#94a3b8'}; flex-wrap: wrap;">
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  <i data-lucide="globe" style="width: 12px; height: 12px; color: #818cf8;"></i>
+                  ${source.domain || 'no-domain'}
+                </span>
+                <span style="color: ${isLightMode ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)'};">&nbsp;|&nbsp;</span>
+                <span style="display: flex; align-items: center; gap: 4px;">
+                  <i data-lucide="target" style="width: 12px; height: 12px; color: #818cf8;"></i>
+                  Relevance: <span style="color: ${isLightMode ? '#4f46e5' : '#a5b4fc'}; font-weight: 600;">${Math.round(source.reliability_score)}%</span>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Right Actions Section -->
+            <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0; padding-left: 12px; border-left: 1px solid ${isLightMode ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'};">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label class="switch-container" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                  <input type="checkbox" id="source-toggle-${source.id}" ${source.is_active ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;" onchange="toggleNewsSource('${source.id}', this.checked)">
+                  <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .3s; border-radius: 34px;"></span>
+                </label>
+                <span id="source-active-label-${source.id}" style="font-size: 0.8rem; font-weight: 600; color: ${source.is_active ? '#10b981' : '#64748b'}; width: 52px;">
+                  ${source.is_active ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              
+              <!-- Red Delete Button -->
+              <button onclick="deleteNewsSource('${source.id}')" style="width: 36px; height: 36px; border-radius: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);" onmouseover="this.style.background='rgba(239, 68, 68, 0.15)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.08)'" title="Delete source">
+                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px; color: #ef4444; font-size: 0.85rem;">
+            ⚠️ Failed to load news pipeline sources: ${err.message}
+          </div>
+        `;
+      }
+    }
+
+    async function createNewSource() {
+      const name = document.getElementById("new-source-name").value.trim();
+      const display = document.getElementById("new-source-display").value.trim();
+      const url = document.getElementById("new-source-url").value.trim();
+      const domain = document.getElementById("new-source-domain").value.trim();
+      const type = document.getElementById("new-source-type").value;
+      const statusEl = document.getElementById("add-source-status");
+
+      if (!name || !display || !url || !domain) {
+        statusEl.innerText = "⚠️ Please fill all fields.";
+        statusEl.style.color = "#f59e0b";
+        return;
+      }
+
+      statusEl.innerText = "Adding...";
+      statusEl.style.color = "var(--text-muted)";
+
+      try {
+        const res = await authenticatedFetch('/api/v1/news/sources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            display_name: display,
+            url: url,
+            domain: domain,
+            source_type: type,
+            reliability_score: 75.0,
+            is_official: false
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.detail || "Failed to create source.");
+        }
+
+        statusEl.innerText = "✓ Source added successfully!";
+        statusEl.style.color = "#10b981";
+
+        // Clear inputs
+        document.getElementById("new-source-name").value = "";
+        document.getElementById("new-source-display").value = "";
+        document.getElementById("new-source-url").value = "";
+        document.getElementById("new-source-domain").value = "";
+
+        setTimeout(() => {
+          statusEl.innerText = "";
+        }, 3000);
+
+        // Refresh source list
+        await loadNewsSources();
+      } catch (err) {
+        statusEl.innerText = `⚠️ ${err.message}`;
+        statusEl.style.color = "#ef4444";
+      }
+    }
+
+    async function deleteNewsSource(sourceId) {
+      if (!confirm("Are you sure you want to delete this news source?")) return;
+      try {
+        const res = await authenticatedFetch(`/api/v1/news/sources/${sourceId}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          await loadNewsSources();
+        }
+      } catch (err) {
+        console.error("Error deleting news source:", err);
+      }
+    }
+
+    async function toggleNewsSource(sourceId, isActive) {
+      try {
+        const res = await authenticatedFetch(`/api/v1/news/sources/${sourceId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: isActive })
+        });
+        if (res.ok) {
+          // Update active status label text and color dynamically
+          const label = document.getElementById(`source-active-label-${sourceId}`);
+          if (label) {
+            label.innerText = isActive ? 'Active' : 'Inactive';
+            label.style.color = isActive ? '#10b981' : '#64748b';
+          }
+          
+          // Re-fetch active sources list to update profile tile count label
+          const sourcesRes = await authenticatedFetch('/api/v1/news/sources');
+          if (sourcesRes.ok) {
+            const sourcesList = await sourcesRes.json();
+            document.getElementById("sources-count-label").innerText = `${sourcesList.filter(s => s.is_active).length}/${sourcesList.length} Active`;
+          }
+        }
+      } catch (err) {
+        console.error("Error toggling news source:", err);
+      }
+    }
+
+    function getSourceEmoji(name) {
+      const mapping = {
+        'openai_blog': '🤖',
+        'google_ai_blog': '🔎',
+        'deepmind_blog': '🧠',
+        'anthropic_news': '🦉',
+        'microsoft_ai_blog': '💻',
+        'meta_ai_blog': '♾️',
+        'nvidia_ai_blog': '🎮',
+        'huggingface_blog': '🤗',
+        'mistral_news': '🌪️',
+        'xai_news': '✖️',
+        'perplexity_blog': '🔍',
+        'stability_ai_news': '🎨',
+        'cohere_blog': '🧬',
+        'arxiv_ai': '📄',
+        'papers_with_code': '📊',
+        'techcrunch_ai': '⚡',
+        'venturebeat_ai': '💼',
+        'mit_tech_review': '🏛️',
+        'reuters_technology': '📰',
+        'bloomberg_tech': '📈',
+        'wired_ai': '🔌',
+        'theverge_ai': '🎬',
+        'arstechnica_ai': '⚙️',
+        'github_trending_ai': '🔥',
+        'github_releases_ai': '📦',
+        'reddit_ai': '👽',
+        'hacker_news': '🧡',
+        'producthunt_ai': '😸',
+        'google_news_ai': '🌍'
+      };
+      return mapping[name] || '📰';
+    }
   </script>
+
+  <!-- ── Custom Settings Modal Overlay ── -->
+  <div id="settings-custom-modal" style="
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  ">
+    <div style="
+      background: #11131c;
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-sizing: border-box;
+      animation: modalFadeIn 0.25s ease-out;
+    ">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 id="settings-modal-title" style="font-family:var(--font-header); font-size:1.15rem; font-weight:700; color:#fff; margin:0;">Settings Options</h3>
+        <button onclick="closeSettingsModal()" style="background:transparent; border:none; color:rgba(255,255,255,0.4); cursor:pointer; display:flex; align-items:center; justify-content:center; padding: 4px; border-radius: 50%;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">
+          <i data-lucide="x" style="width:20px; height:20px;"></i>
+        </button>
+      </div>
+      <div id="settings-modal-body" style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
+        <!-- Dynamic Content -->
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
 </body>
 </html>

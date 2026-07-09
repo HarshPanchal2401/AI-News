@@ -70,8 +70,19 @@ async def job_fetch_and_cluster_news() -> None:
 
     try:
         # ── Step 1: Fetch ─────────────────────────────────────────────────────
+        from sqlalchemy import select
+        from app.models.news_source import NewsSource
+        
+        inactive_sources = set()
+        try:
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(NewsSource.name).where(NewsSource.is_active == False))
+                inactive_sources = set(result.scalars().all())
+        except Exception as e:
+            logger.warning("failed_to_load_inactive_sources_from_db", error=str(e))
+
         orchestrator = NewsFetchOrchestrator()
-        raw_articles = await orchestrator.fetch_all()
+        raw_articles = await orchestrator.fetch_all(inactive_sources=inactive_sources)
         stats["fetched"] = len(raw_articles)
 
         # ── Step 2: Validate (AI relevance + freshness + content) ─────────────

@@ -11,7 +11,8 @@ import math
 import uuid
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,11 +22,14 @@ from app.core.exceptions import NotFoundError
 from app.database.connection import get_db
 from app.models.news_article import NewsArticle
 from app.models.news_analysis import NewsAnalysis
+from app.models.news_source import NewsSource
 from app.models.user import User, UserPreferences
 from app.schemas import (
     NewsArticleListResponse,
     NewsArticleResponse,
     NewsListPaginatedResponse,
+    NewsSourceAdminResponse,
+    NewsSourceUpdateRequest,
 )
 from app.services.cache.redis_client import get_redis_client
 from app.utils.date_utils import start_of_day, utcnow
@@ -75,9 +79,10 @@ async def fetch_live_news(
     page_size: int = Query(default=12, ge=1, le=30, description="Articles to show initially"),
     days: int = Query(default=3, ge=1, le=7, description="How many days back to look"),
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_optional_user),
 ):
     """
-    Fetches live news from all 19 sources, filters to recent articles,
+    Fetches live news from all active sources, filters to recent articles,
     scores each by importance, saves new ones to the database, and returns
     the top N most important ones.
     """
@@ -92,9 +97,29 @@ async def fetch_live_news(
         content_fingerprint,
     )
     from sqlalchemy import select
+    from app.models.user import UserPreferences
+
+    # Get inactive sources from DB
+    inactive_sources = set()
+    try:
+        result = await db.execute(select(NewsSource.name).where(NewsSource.is_active == False))
+        inactive_sources = set(result.scalars().all())
+    except Exception as e:
+        print("Failed to load inactive sources for live fetch:", e)
+
+    # Get user preferences for personalization boosting
+    user_prefs = None
+    if current_user:
+        try:
+            pref_result = await db.execute(
+                select(UserPreferences).where(UserPreferences.user_id == current_user.id)
+            )
+            user_prefs = pref_result.scalar_one_or_none()
+        except Exception as e:
+            print("Failed to load user preferences for personalization boosting:", e)
 
     orchestrator = NewsFetchOrchestrator()
-    all_articles = await orchestrator.fetch_all()
+    all_articles = await orchestrator.fetch_all(inactive_sources=inactive_sources)
 
     now = datetime.now(timezone.utc)
     cutoff = now - timedelta(days=days)
@@ -184,6 +209,20 @@ async def fetch_live_news(
             if kw in text:
                 score += 20
 
+        # Boost based on user preferences (goals, categories, companies)
+        if user_prefs:
+            # 1. Company match boost (+50 pts)
+            if user_prefs.favorite_companies:
+                for comp in user_prefs.favorite_companies:
+                    if comp.lower() in text:
+                        score += 50
+                        
+            # 2. Topic/Goal match boost (+40 pts)
+            if user_prefs.favorite_topics:
+                for topic in user_prefs.favorite_topics:
+                    if topic.lower() in text:
+                        score += 40
+
         return score
 
     # ── Filter to recent only, exclude negatively scored ─────────────────────
@@ -193,8 +232,8 @@ async def fetch_live_news(
         and score_article(a) > 0   # discard excluded/blocked articles
     ]
 
-    # ── Score and sort ALL recent articles ───────────────────────────────────
-    scored = sorted(recent, key=score_article, reverse=True)
+    # Sort chronologically first (newest first), then by score
+    scored = sorted(recent, key=lambda a: (a.published_at.timestamp() if a.published_at else 0, score_article(a)), reverse=True)
     # Cap at 60 total to keep response size reasonable
     all_scored = scored[:60]
 
@@ -368,6 +407,25 @@ async def get_news(
     else:
         stmt = stmt.outerjoin(NewsAnalysis)
 
+    # Personalization filter based on user preferences
+    if current_user and not category and not company:
+        pref_result = await db.execute(
+            select(UserPreferences).where(UserPreferences.user_id == current_user.id)
+        )
+        prefs = pref_result.scalar_one_or_none()
+        if prefs:
+            conditions = []
+            if prefs.favorite_categories:
+                conditions.append(NewsAnalysis.category.in_(prefs.favorite_categories))
+            if prefs.favorite_companies:
+                for comp in prefs.favorite_companies:
+                    conditions.append(NewsAnalysis.companies.any(comp))
+            if prefs.favorite_topics:
+                for topic in prefs.favorite_topics:
+                    conditions.append(NewsAnalysis.tags.any(topic))
+            if conditions:
+                stmt = stmt.where(or_(*conditions))
+
     # Company filter
     if company:
         stmt = stmt.where(
@@ -396,9 +454,10 @@ async def get_news(
     if sort == "date":
         stmt = stmt.order_by(NewsArticle.published_at.desc().nullslast())
     elif sort == "trust":
-        stmt = stmt.order_by(NewsArticle.trust_score.desc())
+        stmt = stmt.order_by(NewsArticle.trust_score.desc(), NewsArticle.published_at.desc().nullslast())
     else:
-        stmt = stmt.order_by(NewsArticle.final_score.desc())
+        # Default: Sort by date desc first to keep the feed fresh, then by score importance
+        stmt = stmt.order_by(NewsArticle.published_at.desc().nullslast(), NewsArticle.final_score.desc())
 
     # Paginate
     offset = (page - 1) * limit
@@ -549,6 +608,159 @@ async def get_daily_brief(
     articles = [article_map[str(aid)] for aid in article_ids if str(aid) in article_map]
 
     return [_article_to_list_schema(a) for a in articles]
+# ── News Sources Endpoints ──
+
+class NewsSourceCreateRequest(BaseModel):
+    name: str = Field(..., max_length=200)
+    display_name: str = Field(..., max_length=200)
+    url: str
+    source_type: str = Field("rss", max_length=20)  # rss | api | scrape
+    domain: str = Field(..., max_length=255)
+    reliability_score: float = Field(75.0, ge=0, le=100)
+    is_official: bool = False
+    official_company: str | None = Field(None, max_length=150)
+
+async def _seed_news_sources_if_empty(db: AsyncSession) -> None:
+    count_stmt = select(func.count(NewsSource.id))
+    result = await db.execute(count_stmt)
+    count = result.scalar_one()
+    if count == 0:
+        try:
+            from app.services.news_fetchers.orchestrator import NewsFetchOrchestrator
+            orchestrator = NewsFetchOrchestrator()
+            for fetcher in orchestrator._fetchers:
+                name = fetcher.SOURCE_NAME
+                domain = fetcher.SOURCE_DOMAIN
+                source_type = fetcher.SOURCE_TYPE
+                is_official = fetcher.IS_OFFICIAL
+                official_company = fetcher.OFFICIAL_COMPANY
+                
+                # Extract URL
+                url = None
+                if hasattr(fetcher, 'feed_url'):
+                    url = fetcher.feed_url
+                elif hasattr(fetcher, 'RSS_URL'):
+                    url = fetcher.RSS_URL
+                elif hasattr(fetcher, 'BLOG_URL'):
+                    url = fetcher.BLOG_URL
+                elif hasattr(fetcher, 'url'):
+                    url = fetcher.url
+                elif hasattr(fetcher, 'url_template'):
+                    url = fetcher.url_template
+                else:
+                    url = f"https://{domain}"
+                    
+                # Create display name
+                display_name = name.replace('_', ' ').title()
+                if official_company:
+                    display_name = f"{official_company} News" if "news" in name else f"{official_company} Blog"
+                else:
+                    display_name = display_name.replace(" Ai", " AI").replace(" Rss", "")
+                    
+                new_source = NewsSource(
+                    name=name,
+                    display_name=display_name,
+                    url=url,
+                    source_type=source_type,
+                    domain=domain,
+                    reliability_score=90.0 if is_official else 75.0,
+                    is_official=is_official,
+                    official_company=official_company,
+                    is_active=True,
+                )
+                db.add(new_source)
+            await db.commit()
+        except Exception as e:
+            print("Failed to seed news sources:", e)
+
+@router.get(
+    "/sources",
+    response_model=list[NewsSourceAdminResponse],
+    summary="List all news sources for authenticated users",
+)
+async def list_news_sources(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[NewsSource]:
+    await _seed_news_sources_if_empty(db)
+    result = await db.execute(select(NewsSource).order_by(NewsSource.name))
+    return list(result.scalars().all())
+
+@router.post(
+    "/sources",
+    response_model=NewsSourceAdminResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new news source",
+)
+async def create_news_source(
+    payload: NewsSourceCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> NewsSource:
+    existing_stmt = select(NewsSource).where(NewsSource.name == payload.name)
+    existing = (await db.execute(existing_stmt)).scalar_one_or_none()
+    if existing:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=409, detail="A news source with this name already exists.")
+        
+    new_source = NewsSource(
+        name=payload.name,
+        display_name=payload.display_name,
+        url=payload.url,
+        source_type=payload.source_type,
+        domain=payload.domain,
+        reliability_score=payload.reliability_score,
+        is_official=payload.is_official,
+        official_company=payload.official_company,
+        is_active=True,
+    )
+    db.add(new_source)
+    await db.commit()
+    await db.refresh(new_source)
+    return new_source
+
+@router.put(
+    "/sources/{source_id}",
+    response_model=NewsSourceAdminResponse,
+    summary="Update news source state for authenticated users",
+)
+async def update_news_source(
+    source_id: uuid.UUID,
+    payload: NewsSourceUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> NewsSource:
+    result = await db.execute(select(NewsSource).where(NewsSource.id == source_id))
+    source = result.scalar_one_or_none()
+    if not source:
+        raise NotFoundError("NewsSource", source_id)
+        
+    if payload.is_active is not None:
+        source.is_active = payload.is_active
+    if payload.reliability_score is not None:
+        source.reliability_score = payload.reliability_score
+        
+    await db.commit()
+    await db.refresh(source)
+    return source
+
+@router.delete(
+    "/sources/{source_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a news source",
+)
+async def delete_news_source(
+    source_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    result = await db.execute(select(NewsSource).where(NewsSource.id == source_id))
+    source = result.scalar_one_or_none()
+    if not source:
+        raise NotFoundError("NewsSource", source_id)
+        
+    await db.delete(source)
+    await db.commit()
 
 
 @router.get(
@@ -726,7 +938,6 @@ async def get_daily_brief(
     articles = [article_map[str(aid)] for aid in article_ids if str(aid) in article_map]
 
     return [_article_to_list_schema(a) for a in articles]
-
 
 # ── Schema Helpers ────────────────────────────────────────────────────────────
 

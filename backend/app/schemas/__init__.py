@@ -295,6 +295,7 @@ class NewsSourceAdminResponse(APIBase):
     display_name: str
     url: str
     source_type: str
+    domain: str | None = None
     is_active: bool
     reliability_score: float
     consecutive_failures: int

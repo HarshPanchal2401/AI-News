@@ -180,7 +180,7 @@ def _register_routers(app: FastAPI) -> None:
     app.include_router(intelligence_router, prefix=prefix)
 
     # Root UI Route
-    from fastapi.responses import HTMLResponse
+    from fastapi.responses import HTMLResponse, FileResponse
     import os
 
     @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -189,7 +189,25 @@ def _register_routers(app: FastAPI) -> None:
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as f:
                 return HTMLResponse(content=f.read())
-        return HTMLResponse(content="<h1>AI Pulse UI Template Not Found</h1>")
+        return HTMLResponse(content="<h1>AI News UI Template Not Found</h1>")
+
+    @app.get("/logo.png", include_in_schema=False)
+    async def serve_logo():
+        path = os.path.join("app", "templates", "logo.png")
+        if os.path.exists(path):
+            return FileResponse(path)
+        return HTMLResponse(content="", status_code=404)
+
+    @app.get("/logo_light.png", include_in_schema=False)
+    async def serve_logo_light():
+        path = os.path.join("app", "templates", "logo_light.png")
+        if os.path.exists(path):
+            return FileResponse(path)
+        # fallback to dark logo
+        path = os.path.join("app", "templates", "logo.png")
+        if os.path.exists(path):
+            return FileResponse(path)
+        return HTMLResponse(content="", status_code=404)
 
 
 # ── Application Instance ──────────────────────────────────────────────────────

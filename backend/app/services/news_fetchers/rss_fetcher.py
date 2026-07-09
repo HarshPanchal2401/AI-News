@@ -39,12 +39,26 @@ class RSSFetcher(BaseFetcher):
     async def fetch(self) -> list[RawArticle]:
         """Parse the RSS feed and return normalized articles."""
         import asyncio
+        from app.utils.http_client import fetch_text
 
-        # feedparser is synchronous — run in thread pool to avoid blocking
-        loop = asyncio.get_event_loop()
-        feed = await loop.run_in_executor(
-            None, lambda: feedparser.parse(self.feed_url)
-        )
+        # Use our robust fetch_text with rotating User-Agent to bypass Cloudflare/bot block
+        try:
+            feed_content = await fetch_text(self.feed_url, source_name=self.SOURCE_NAME)
+            loop = asyncio.get_event_loop()
+            feed = await loop.run_in_executor(
+                None, lambda: feedparser.parse(feed_content)
+            )
+        except Exception as e:
+            self.logger.warning(
+                "rss_http_fetch_failed_using_fallback",
+                source=self.SOURCE_NAME,
+                url=self.feed_url,
+                error=str(e),
+            )
+            loop = asyncio.get_event_loop()
+            feed = await loop.run_in_executor(
+                None, lambda: feedparser.parse(self.feed_url)
+            )
 
         if feed.bozo and not feed.entries:
             self.logger.warning(
