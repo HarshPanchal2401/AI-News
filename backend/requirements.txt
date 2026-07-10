@@ -68,4 +68,5 @@ httpx
 factory-boy
 faker
 respx
+aiosqlite
 
