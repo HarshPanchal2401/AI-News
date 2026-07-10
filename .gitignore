@@ -62,6 +62,10 @@ credentials/
 firebase.json
 codebase_analysis.md
 
+# ── Local-only directories ────────────────────────────────
+ngrok/
+venv/
+
 # ── GitHub Copilot / AI agent scratch ────────────────────
 .agents/
 
