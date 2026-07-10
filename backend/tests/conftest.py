@@ -18,6 +18,19 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+# Override environment variables for testing before importing settings
+import os
+os.environ["APP_ENV"] = "testing"
+os.environ.setdefault("SECRET_KEY", "test_secret_key_must_be_thirty_two_characters_long_min")
+os.environ.setdefault("SUPABASE_URL", "https://test-project.supabase.co")
+os.environ.setdefault("SUPABASE_ANON_KEY", "test-anon-key")
+os.environ.setdefault("SUPABASE_SERVICE_KEY", "test-service-key")
+os.environ.setdefault("SUPABASE_JWT_SECRET", "test-jwt-secret")
+os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://test:test@localhost:5432/test")
+os.environ.setdefault("GEMINI_API_KEY", "test-gemini-key")
+os.environ.setdefault("UPSTASH_REDIS_REST_URL", "https://test-redis.upstash.io")
+os.environ.setdefault("UPSTASH_REDIS_REST_TOKEN", "test-redis-token")
+
 from app.core.config import settings
 from app.database.base import Base
 from app.models.news_article import NewsArticle
@@ -26,9 +39,6 @@ from app.models.news_source import NewsSource
 from app.models.user import User, UserPreferences
 from app.services.news_fetchers.base import RawArticle
 
-# Override settings for testing
-import os
-os.environ.setdefault("APP_ENV", "testing")
 
 # Mock PostgreSQL ARRAY and JSONB types compilation for SQLite in tests
 from sqlalchemy.ext.compiler import compiles
