@@ -6,7 +6,8 @@
 [build]
 builder        = "DOCKERFILE"
 dockerfilePath = "backend/Dockerfile"
-buildContext   = "backend"
+# Use root repository context so Dockerfile can find files under backend/
+buildContext   = "."
 
 [deploy]
 # Railway injects $PORT automatically — never hardcode 8000

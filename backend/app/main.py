@@ -183,31 +183,42 @@ def _register_routers(app: FastAPI) -> None:
     from fastapi.responses import HTMLResponse, FileResponse
     import os
 
+    def find_frontend_file(filename: str) -> str | None:
+        """Find frontend file using multiple fallback locations."""
+        paths_to_try = [
+            os.path.join("frontend", filename),             # Running from repo root (Docker/Prod)
+            os.path.join("..", "frontend", filename),        # Running from backend/ (Local dev)
+            os.path.join("app", "templates", filename),     # Legacy fallback
+        ]
+        for path in paths_to_try:
+            if os.path.exists(path):
+                return path
+        return None
+
     @app.get("/", response_class=HTMLResponse, include_in_schema=False)
     async def serve_index():
-        path = os.path.join("app", "templates", "index.html")
-        if os.path.exists(path):
+        path = find_frontend_file("index.html")
+        if path:
             with open(path, "r", encoding="utf-8") as f:
                 return HTMLResponse(content=f.read())
-        return HTMLResponse(content="<h1>AI News UI Template Not Found</h1>")
+        return HTMLResponse(content="<h1>AI News Frontend Not Found</h1>")
 
     @app.get("/logo.png", include_in_schema=False)
     async def serve_logo():
-        path = os.path.join("app", "templates", "logo.png")
-        if os.path.exists(path):
+        path = find_frontend_file("logo.png")
+        if path:
             return FileResponse(path)
         return HTMLResponse(content="", status_code=404)
 
     @app.get("/logo_light.png", include_in_schema=False)
     async def serve_logo_light():
-        path = os.path.join("app", "templates", "logo_light.png")
-        if os.path.exists(path):
-            return FileResponse(path)
-        # fallback to dark logo
-        path = os.path.join("app", "templates", "logo.png")
-        if os.path.exists(path):
+        path = find_frontend_file("logo_light.png")
+        if not path:
+            path = find_frontend_file("logo.png")
+        if path:
             return FileResponse(path)
         return HTMLResponse(content="", status_code=404)
+
 
 
 # ── Application Instance ──────────────────────────────────────────────────────

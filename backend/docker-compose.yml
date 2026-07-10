@@ -8,8 +8,8 @@ version: "3.9"
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: backend/Dockerfile
       target: runtime
     container_name: ai_pulse_api
     restart: unless-stopped
@@ -23,6 +23,7 @@ services:
     volumes:
       # Hot-reload in dev (mount source code)
       - ./app:/app/app:ro
+      - ../frontend:/app/frontend:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

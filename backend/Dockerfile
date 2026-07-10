@@ -1,6 +1,6 @@
 # =============================================================================
 # AI Pulse – Dockerfile
-# Multi-stage build for production (Railway-ready)
+# Multi-stage build for production (Railway-ready, root context)
 # =============================================================================
 
 # ── Stage 1: Builder ───────────────────────────────────────────────────────────
@@ -15,10 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install dependencies into /install (not user-local)
-# Using --prefix=/install ensures packages end up in a path
-# that can be COPY'd into the runtime stage and accessed by any user.
-COPY requirements.txt .
+# Copy and install dependencies into /install
+# Build context is repo root, so requirements.txt is inside backend/
+COPY backend/requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir --prefix=/install -r requirements.txt
 
@@ -37,14 +36,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy installed packages from builder into the system site-packages path.
-# /usr/local is owned by root and readable by all users — fixes the bug
-# where packages in /root/.local were invisible to appuser.
+# Copy installed packages from builder
 COPY --from=builder /install /usr/local
 
-# Copy application code
-COPY app/ ./app/
-COPY alembic.ini* ./
+# Copy application code from backend/app of the repo root context
+COPY backend/app/ ./app/
+COPY backend/alembic.ini* ./
+COPY frontend/ ./frontend/
+
 
 # Environment
 ENV PYTHONPATH=/app
@@ -52,16 +51,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Health check
-# Use ${PORT:-8000} so it works both locally (port 8000) and on Railway (dynamic port)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Expose default port (Railway overrides via $PORT at runtime)
+# Expose default port
 EXPOSE 8000
 
 # Switch to non-root user
 USER appuser
 
 # Use shell form so ${PORT:-8000} variable substitution works.
-# Railway injects $PORT at deploy time; locally it falls back to 8000.
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --log-level info"]
