@@ -10,8 +10,8 @@ dockerfilePath = "backend/Dockerfile"
 buildContext   = "."
 
 [deploy]
-# Railway injects $PORT automatically — never hardcode 8000
-startCommand        = "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info"
+# No startCommand — the Dockerfile CMD uses shell form to expand ${PORT:-8000}.
+# Railway runs a Dockerfile startCommand in exec form, which does NOT expand $PORT.
 healthcheckPath     = "/health"
 healthcheckTimeout  = 30
 restartPolicyType   = "ON_FAILURE"
